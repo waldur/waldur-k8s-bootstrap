@@ -1,0 +1,26 @@
+include:
+  - project: "waldur/waldur-pipelines"
+    file: "/templates/stages.yml"
+
+Upload docs:
+  image:
+    name: registry.hpc.ut.ee/mirror/alpine/git:v2.30.2
+    entrypoint: [""]
+  stage: deploy
+  interruptible: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "schedule"'
+  script:
+    - tar -zcvf rke2-setup.tar.gz ansible-config/
+    - cd /tmp/
+    - git clone "https://gitlab-ci-token:$GITLAB_TOKEN@$CI_SERVER_HOST/waldur/waldur-docs.git"
+    - git config --global user.name "$GITLAB_USER_NAME"
+    - git config --global user.email "$GITLAB_USER_EMAIL"
+    - cd waldur-docs/
+    - ls docs/admin-guide/rke2-setup || mkdir -p docs/admin-guide/rke2-setup
+    - cp -v $CI_PROJECT_DIR/rke2-setup.tar.gz docs/admin-guide/rke2-setup/
+    - cp -v $CI_PROJECT_DIR/README.md docs/admin-guide/rke2-setup/RKE2-setup.md
+    - git add docs/admin-guide/rke2-setup/
+    - git commit -m 'Update REK2 bootstrap docs' || exit 0
+    - git branch new-rke2-bootstrap-docs
+    - git push --set-upstream origin new-rke2-bootstrap-docs:master
