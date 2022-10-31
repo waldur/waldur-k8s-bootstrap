@@ -63,7 +63,7 @@
   delegate_to: localhost
   run_once: yes
   get_url:
-    url: https://github.com/rancher/rke2/releases/download/v1.24.7+rke2r1/rke2-images-canal.linux-amd64.tar.gz
+    url: https://github.com/rancher/rke2/releases/download/{{ rke2_version }}/rke2-images-canal.linux-amd64.tar.gz
     dest: rke2/rke2-images-canal.linux-amd64.tar.gz
   environment: "{{ proxy_env | default({}) }}"
   when:
@@ -74,7 +74,7 @@
   delegate_to: localhost
   run_once: yes
   get_url:
-    url: https://github.com/rancher/rke2/releases/download/v1.24.7+rke2r1/rke2-images-core.linux-amd64.tar.gz
+    url: https://github.com/rancher/rke2/releases/download/{{ rke2_version }}/rke2-images-core.linux-amd64.tar.gz
     dest: rke2/rke2-images-core.linux-amd64.tar.gz
   environment: "{{ proxy_env | default({}) }}"
   when:
@@ -97,7 +97,7 @@
 
 - name: Copy RKE2 core archive to targets
   copy:
-    src: rke2/rke2-images-canal.linux-amd64.tar.gz
+    src: rke2/rke2-images-core.linux-amd64.tar.gz
     dest: /var/lib/rancher/rke2/agent/images/rke2-images-core.linux-amd64.tar.gz
   when:
     - rke2_air_gap_installation | default(true) | bool
@@ -106,6 +106,7 @@
   copy:
     src: rke2/rke2-install.sh
     dest: /tmp/rke2-install.sh
+    mode: 0777
 
 - name: Run installer
   shell: |
@@ -130,6 +131,17 @@
       server: https://{{ rke2_initial_server_hostname }}:9345
       token: {{ rke2_shared_token }}
   when: not (initial_server | default(false) | bool)
+
+- name: Create RKE2 daemon env file with proxy settings
+  blockinfile:
+    path: /etc/default/rke2-server
+    create: yes
+    state: present
+    block: |
+      {% for key, value in proxy_env.items() %}
+      {{ key }}={{ value }}
+      {{ key | upper }}={{ value }}
+      {% endfor %}
 
 - name: Enable RKE2 server
   systemd:
