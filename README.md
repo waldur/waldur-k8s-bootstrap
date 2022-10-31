@@ -39,5 +39,5 @@ To install Waldur on top of [RKE2](https://docs.rke2.io/) you need to:
 
     ```bash
     cd ansible-config
-    ansible-playbook -D -i rke2_inventory main.yaml
+    ansible-playbook -D -i rke2_inventory install.yaml
     ```
