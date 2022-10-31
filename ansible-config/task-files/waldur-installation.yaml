@@ -161,7 +161,7 @@
     - "'bitnami/rabbitmq-10.3.5.tgz' is file"
     - initial_server | default(false) | bool
 
-- name: Install PostreSQL release (from archive)
+- name: Install PostrgeSQL release (from archive)
   kubernetes.core.helm:
     release_name: postgresql
     chart_ref: postgresql-11.9.1.tgz
