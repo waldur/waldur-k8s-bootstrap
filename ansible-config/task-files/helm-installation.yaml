@@ -19,9 +19,26 @@
     state: installed
 
 - name: Install Helm
-  command: sh /tmp/get-helm.sh
-  environment:
-    HELM_INSTALL_DIR: /usr/bin
+  shell: |
+    HELM_INSTALL_DIR=/usr/bin sh /tmp/get-helm.sh
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    helm_installed.rc != 0
+  ignore_errors: yes
+
+- name: Check if Helm is installed
+  command: which helm
+  changed_when: false
+  failed_when: helm_installed.rc not in [0, 1]
+  register: helm_installed
+
+- name: Install Helm from archive
+  shell: |
+    curl -L -o helm-installer.tar.gz https://get.helm.sh/helm-v3.10.1-linux-amd64.tar.gz
+    tar -zxvf helm-installer.tar.gz
+    mv linux-amd64/helm /usr/bin
+    rm -rf linux-amd64/
+  environment: "{{ proxy_env | default({}) }}"
   when:
     helm_installed.rc != 0
 
@@ -35,5 +52,3 @@
   debug:
     msg: "{{ release_list.stdout }}"
   run_once: true
-
-

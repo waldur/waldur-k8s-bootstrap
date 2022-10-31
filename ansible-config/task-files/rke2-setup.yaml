@@ -33,14 +33,84 @@
     state: stopped
   when: ansible_facts.services['firewalld.service'] is defined
 
+- name: Check if SE linux enabled
+  shell: getenforce
+  register: selinux
+
+- name: Disable SE linux
+  shell: setenforce 0
+  when:
+    - selinux.stdout != 'Disabled'
+
 # RKE2 server setup
+- name: Create directory for custom Rancher root
+  file:
+    state: directory
+    path: "{{ rke2_custom_root }}"
+  when:
+    - rke2_custom_root is defined
+
+- name: Create symbolic link for Rancher root
+  file:
+    state: link
+    src: "{{ rke2_custom_root }}"
+    dest: /var/lib/rancher
+    force: true
+  when:
+    - rke2_custom_root is defined
+
+- name: Download RKE2 canal archive
+  delegate_to: localhost
+  run_once: yes
+  get_url:
+    url: https://github.com/rancher/rke2/releases/download/v1.24.7+rke2r1/rke2-images-canal.linux-amd64.tar.gz
+    dest: rke2/rke2-images-canal.linux-amd64.tar.gz
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - rke2_air_gap_installation | default(true) | bool
+    - "'rke2/rke2-images-canal.linux-amd64.tar.gz' is not file"
+
+- name: Download RKE2 core archive
+  delegate_to: localhost
+  run_once: yes
+  get_url:
+    url: https://github.com/rancher/rke2/releases/download/v1.24.7+rke2r1/rke2-images-core.linux-amd64.tar.gz
+    dest: rke2/rke2-images-core.linux-amd64.tar.gz
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - rke2_air_gap_installation | default(true) | bool
+    - "'rke2/rke2-images-core.linux-amd64.tar.gz' is not file"
+
+- name: Create directory for RKE2 images
+  file:
+    state: directory
+    path: /var/lib/rancher/rke2/agent/images/
+  when:
+    - rke2_air_gap_installation | default(true) | bool
+
+- name: Copy RKE2 canal archive to targets
+  copy:
+    src: rke2/rke2-images-canal.linux-amd64.tar.gz
+    dest: /var/lib/rancher/rke2/agent/images/rke2-images-canal.linux-amd64.tar.gz
+  when:
+    - rke2_air_gap_installation | default(true) | bool
+
+- name: Copy RKE2 core archive to targets
+  copy:
+    src: rke2/rke2-images-canal.linux-amd64.tar.gz
+    dest: /var/lib/rancher/rke2/agent/images/rke2-images-core.linux-amd64.tar.gz
+  when:
+    - rke2_air_gap_installation | default(true) | bool
+
 - name: Upload RKE2 installer
   copy:
     src: rke2/rke2-install.sh
     dest: /tmp/rke2-install.sh
 
 - name: Run installer
-  command: sh /tmp/rke2-install.sh
+  shell: |
+     export INSTALL_RKE2_VERSION="{{ rke2_version }}"
+     /tmp/rke2-install.sh
   environment: "{{ proxy_env | default({}) }}"
 
 - name: Create config file for first server
@@ -72,6 +142,10 @@
     state: started
   # It is required to run initial server before others
   when: initial_server | default(false) | bool
+
+- name: Pause before launching of additional RKE2 servers
+  pause:
+    seconds: 10
 
 - name: Start RKE2 additional servers
   throttle: 1
