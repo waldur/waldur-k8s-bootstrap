@@ -1,0 +1,33 @@
+# Repo-based installation
+- name: Add bitnami repository
+  kubernetes.core.helm_repository:
+    repo_name: bitnami
+    repo_url: https://charts.bitnami.com/bitnami
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - initial_server | default(false) | bool
+
+- name: Install RabbitMQ release
+  kubernetes.core.helm:
+    release_name: rmq
+    chart_ref: bitnami/rabbitmq
+    chart_version: 10.3.5
+    state: present
+    values_files:
+      - ./waldur_helm/rmq-values.yaml
+    namespace: "{{ waldur_helm_namespace | default('default') }}"
+    create_namespace: true
+    update_repo_cache: true
+    kubeconfig: /etc/rancher/rke2/rke2.yaml
+  when:
+    - initial_server | default(false) | bool
+    - not (helm_commands_using_shell | default('false') | bool)
+
+- name: Install RabbitMQ release via shell
+  shell: |
+    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+    helm upgrade --install rmq bitnami/rabbitmq --version 10.3.5 -n "{{ waldur_helm_namespace | default('default') }}" -f waldur_helm/rmq-values.yaml
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - initial_server | default(false) | bool
+    - helm_commands_using_shell | default('false') | bool

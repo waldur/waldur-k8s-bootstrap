@@ -1,0 +1,20 @@
+- name: Update Waldur release
+  hosts: "{{ host_group | default('rke2_nodes') }}"
+  become: true
+  vars_files:
+    - rke2_vars
+  tasks:
+    - name: Get environment
+      run_once: true
+      shell: env
+      environment: "{{ proxy_env | default({}) }}"
+      register: env
+
+    - name: Print environment
+      run_once: true
+      ansible.builtin.debug:
+        msg: "{{ env.stdout }}"
+
+    - name: Setup Waldur
+      import_tasks: task-files/waldur-installation.yaml
+      when: setup_waldur | default(true)

@@ -11,20 +11,17 @@
     enabled: true
     state: started
 
-# Longhorn installation
-- name: Add Longhorn repository
-  kubernetes.core.helm_repository:
-    repo_name: longhorn
-    repo_url: https://charts.longhorn.io
-    repo_state: present
-  environment: "{{ proxy_env | default({}) }}"
+- name: Copy Longhorn chart archive
+  copy:
+    src: longhorn/longhorn-"{{ longhorn_version }}".tgz
+    dest: longhorn-"{{ longhorn_version }}".tgz
   when:
     - initial_server | default(false) | bool
+    - not (helm_commands_using_shell | default('false') | bool)
 
-- name: Install Longhorn release
+- name: Install Longhorn release (from archive)
   kubernetes.core.helm:
-    chart_ref: longhorn/longhorn
-    chart_version: "{{ longhorn_version }}"
+    chart_ref: longhorn-"{{ longhorn_version }}".tgz
     release_name: longhorn
     state: present
     namespace: longhorn-system
@@ -32,20 +29,17 @@
     create_namespace: true
     kubeconfig: /etc/rancher/rke2/rke2.yaml
     values:
-      csi:
-        kubeletRootDir: /var/lib/kubelet/
       defaultSettings:
         defaultDataPath: "{{ storage_directory }}"
-  environment: "{{ proxy_env | default({}) }}"
   when:
     - initial_server | default(false) | bool
     - not (helm_commands_using_shell | default('false') | bool)
 
-- name: Install Longhorn release via shell
+- name: Install Longhorn release via shell (from archive)
   shell: |
     export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
     kubectl create namespace longhorn-system || true
-    helm upgrade --install longhorn longhorn/longhorn --version "{{ longhorn_version }}" -n longhorn-system --set defaultSettings.defaultDataPath="{{ storage_directory }}" --set csi.kubeletRootDir=/var/lib/kubelet/
+    helm upgrade --install longhorn longhorn-"{{ longhorn_version }}".tgz -n longhorn-system --set defaultSettings.defaultDataPath="{{ storage_directory }}" --set csi.kubeletRootDir=/var/lib/kubelet/
   environment: "{{ proxy_env | default({}) }}"
   when:
     - initial_server | default(false) | bool

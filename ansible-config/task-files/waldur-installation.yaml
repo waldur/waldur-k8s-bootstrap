@@ -1,18 +1,9 @@
+# Prerequisites for Archive-based installation
 - name: Install git
   dnf:
     pkg:
       - git
     state: installed
-  when:
-    - "'waldur/waldur-chart.zip' is not file"
-    - initial_server | default(false) | bool
-
-- name: Clone Waldur Helm repository
-  git:
-    repo: "{{ waldur_helm_repo_url | default('https://github.com/waldur/waldur-helm') }}"
-    dest: waldur_helm
-    force: yes
-  environment: "{{ proxy_env | default({}) }}"
   when:
     - "'waldur/waldur-chart.zip' is not file"
     - initial_server | default(false) | bool
@@ -26,6 +17,7 @@
     - "'waldur/waldur-chart.zip' is file"
     - initial_server | default(false) | bool
 
+# Archive-based installation
 - name: Unarchive Waldur Helm chart
   unarchive:
     src: waldur/waldur-chart.zip
@@ -38,6 +30,17 @@
   command: mv waldur-helm-master waldur_helm
   when:
     - "'waldur/waldur-chart.zip' is file"
+    - initial_server | default(false) | bool
+
+# Repo-based installation
+- name: Clone Waldur Helm repository
+  git:
+    repo: "{{ waldur_helm_repo_url | default('https://github.com/waldur/waldur-helm') }}"
+    dest: waldur_helm
+    force: yes
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - "'waldur/waldur-chart.zip' is not file"
     - initial_server | default(false) | bool
 
 - name: Create an empty file for custom Waldur values
@@ -80,126 +83,6 @@
   when:
     - initial_server | default(false) | bool
     - find_result.matched > 0
-
-- name: Add bitnami repository
-  kubernetes.core.helm_repository:
-    repo_name: bitnami
-    repo_url: https://charts.bitnami.com/bitnami
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - "'bitnami/postgresql-11.9.1.tgz' is not file"
-    - "'bitnami/rabbitmq-10.3.5.tgz' is not file"
-    - initial_server | default(false) | bool
-
-- name: Install PostgreSQL release
-  kubernetes.core.helm:
-    release_name: postgresql
-    chart_ref: bitnami/postgresql
-    chart_version: 11.9.1
-    state: present
-    values_files:
-      - ./waldur_helm/postgresql-values.yaml
-    namespace: "{{ waldur_helm_namespace | default('default') }}"
-    kubeconfig: /etc/rancher/rke2/rke2.yaml
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - "'bitnami/postgresql-11.9.1.tgz' is not file"
-    - initial_server | default(false) | bool
-    - not (helm_commands_using_shell | default('false') | bool)
-
-- name: Install PostgreSQL release via shell
-  shell: |
-    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-    kubectl create namespace "{{ waldur_helm_namespace | default('default') }}" || true
-    helm upgrade --install postgresql bitnami/postgresql --version 11.9.1 -n "{{ waldur_helm_namespace | default('default') }}" -f waldur_helm/postgresql-values.yaml
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - "'bitnami/postgresql-11.9.1.tgz' is not file"
-    - initial_server | default(false) | bool
-    - helm_commands_using_shell | default('false') | bool
-
-- name: Install RabbitMQ release
-  kubernetes.core.helm:
-    release_name: rmq
-    chart_ref: bitnami/rabbitmq
-    chart_version: 10.3.5
-    state: present
-    values_files:
-      - ./waldur_helm/rmq-values.yaml
-    namespace: "{{ waldur_helm_namespace | default('default') }}"
-    create_namespace: true
-    update_repo_cache: true
-    kubeconfig: /etc/rancher/rke2/rke2.yaml
-  when:
-    - "'bitnami/rabbitmq-10.3.5.tgz' is not file"
-    - initial_server | default(false) | bool
-    - not (helm_commands_using_shell | default('false') | bool)
-
-- name: Install RabbitMQ release via shell
-  shell: |
-    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-    helm upgrade --install rmq bitnami/rabbitmq --version 10.3.5 -n "{{ waldur_helm_namespace | default('default') }}" -f waldur_helm/rmq-values.yaml
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - "'bitnami/rabbitmq-10.3.5.tgz' is not file"
-    - initial_server | default(false) | bool
-    - helm_commands_using_shell | default('false') | bool
-
-- name: Copy PostgreSQL chart archive
-  copy:
-    src: bitnami/postgresql-11.9.1.tgz
-    dest: postgresql-11.9.1.tgz
-  when:
-    - "'bitnami/postgresql-11.9.1.tgz' is file"
-    - initial_server | default(false) | bool
-
-- name: Copy RMQ chart archive
-  copy:
-    src: bitnami/rabbitmq-10.3.5.tgz
-    dest: rabbitmq-10.3.5.tgz
-  when:
-    - "'bitnami/rabbitmq-10.3.5.tgz' is file"
-    - initial_server | default(false) | bool
-
-- name: Install PostrgeSQL release (from archive)
-  kubernetes.core.helm:
-    release_name: postgresql
-    chart_ref: postgresql-11.9.1.tgz
-    state: present
-    values_files:
-      - ./waldur_helm/postgresql-values.yaml
-    namespace: "{{ waldur_helm_namespace | default('default') }}"
-    kubeconfig: /etc/rancher/rke2/rke2.yaml
-  when:
-    - "'bitnami/postgresql-11.9.1.tgz' is file"
-    - initial_server | default(false) | bool
-    - not (helm_commands_using_shell | default('false') | bool)
-
-- name: Install RabbitMQ release (from archive)
-  kubernetes.core.helm:
-    release_name: rmq
-    chart_ref: rabbitmq-10.3.5.tgz
-    state: present
-    values_files:
-      - ./waldur_helm/rmq-values.yaml
-    namespace: "{{ waldur_helm_namespace | default('default') }}"
-    create_namespace: true
-    update_repo_cache: true
-    kubeconfig: /etc/rancher/rke2/rke2.yaml
-  when:
-    - "'bitnami/rabbitmq-10.3.5.tgz' is file"
-    - initial_server | default(false) | bool
-    - not (helm_commands_using_shell | default('false') | bool)
-
-- name: Install RabbitMQ release via shell (from archive)
-  shell: |
-    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-    helm upgrade --install rmq bitnami/rabbitmq-10.3.5.tgz -n "{{ waldur_helm_namespace | default('default') }}" -f waldur_helm/rmq-values.yaml
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - "'bitnami/rabbitmq-10.3.5.tgz' is file"
-    - initial_server | default(false) | bool
-    - helm_commands_using_shell | default('false') | bool
 
 - name: Install Waldur release
   kubernetes.core.helm:
