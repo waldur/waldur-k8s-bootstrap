@@ -33,24 +33,26 @@
     create_namespace: true
     kubeconfig: /etc/rancher/rke2/rke2.yaml
     values:
+      csi:
+        kubeletRootDir: /var/lib/kubelet/
       defaultSettings:
         defaultDataPath: "{{ storage_directory }}"
   environment: "{{ proxy_env | default({}) }}"
   when:
     - "'longhorn/longhorn-1.3.1.tgz' is not file"
     - initial_server | default(false) | bool
-    - not (helm_install_using_binary | default('false') | bool)
+    - not (helm_commands_using_shell | default('false') | bool)
 
-- name: Install Longhorn release manually
+- name: Install Longhorn release via shell
   shell: |
     export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
     kubectl create namespace longhorn-system || true
-    helm upgrade --install longhorn longhorn/longhorn --version 1.3.1 --set defaultSettings.defaultDataPath="{{ storage_directory }}"
+    helm upgrade --install longhorn longhorn/longhorn --version 1.3.1 -n longhorn-system --set defaultSettings.defaultDataPath="{{ storage_directory }}" --set csi.kubeletRootDir=/var/lib/kubelet/
   environment: "{{ proxy_env | default({}) }}"
   when:
     - "'longhorn/longhorn-1.3.1.tgz' is not file"
     - initial_server | default(false) | bool
-    - helm_install_using_binary | default('false') | bool
+    - helm_commands_using_shell | default('false') | bool
 
 - name: Copy Longhorn chart archive
   copy:
@@ -59,7 +61,7 @@
   when:
     - "'longhorn/longhorn-1.3.1.tgz' is file"
     - initial_server | default(false) | bool
-    - not (helm_install_using_binary | default('false') | bool)
+    - not (helm_commands_using_shell | default('false') | bool)
 
 - name: Install Longhorn release (from archive)
   kubernetes.core.helm:
@@ -76,4 +78,15 @@
   when:
     - "'longhorn/longhorn-1.3.1.tgz' is file"
     - initial_server | default(false) | bool
-    - not (helm_install_using_binary | default('false') | bool)
+    - not (helm_commands_using_shell | default('false') | bool)
+
+- name: Install Longhorn release via shell (from archive)
+  shell: |
+    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+    kubectl create namespace longhorn-system || true
+    helm upgrade --install longhorn longhorn-1.3.1.tgz -n longhorn-system --set defaultSettings.defaultDataPath="{{ storage_directory }}" --set csi.kubeletRootDir=/var/lib/kubelet/
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - "'longhorn/longhorn-1.3.1.tgz' is file"
+    - initial_server | default(false) | bool
+    - helm_commands_using_shell | default('false') | bool
