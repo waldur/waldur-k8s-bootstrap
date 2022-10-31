@@ -3,6 +3,7 @@
     repo_name: kubernetes-dashboard
     repo_url: https://kubernetes.github.io/dashboard/
     repo_state: present
+  environment: "{{ proxy_env | default({}) }}"
   when:
     - "'kubernetes-dashboard/k8s-dashboard-5.10.0.tar.gz' is not file"
     - initial_server | default(false) | bool
@@ -20,6 +21,17 @@
   when:
     - "'kubernetes-dashboard/k8s-dashboard-5.10.0.tar.gz' is not file"
     - initial_server | default(false) | bool
+    - not (helm_commands_using_shell | default('false') | bool)
+
+- name: Install k8s dashboard release via shell
+  shell: |
+    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+    kubectl create namespace kubernetes-dashboard || true
+    helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --version 5.10.0 -n kubernetes-dashboard
+  when:
+    - "'kubernetes-dashboard/k8s-dashboard-5.10.0.tar.gz' is not file"
+    - initial_server | default(false) | bool
+    - helm_commands_using_shell | default('false') | bool
 
 - name: Copy k8s chart archive
   copy:
@@ -41,3 +53,13 @@
   when:
     - "'kubernetes-dashboard/k8s-dashboard-5.10.0.tar.gz' is file"
     - initial_server | default(false) | bool
+
+- name: Install k8s dashboard release via shell (from archive)
+  shell: |
+    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+     kubernetes-dashboard || true
+    helm upgrade --install kubernetes-dashboard kubernetes-dashboard/k8s-dashboard-5.10.0.tar.gz -n kubernetes-dashboard
+  when:
+    - "'kubernetes-dashboard/k8s-dashboard-5.10.0.tar.gz' is file"
+    - initial_server | default(false) | bool
+    - helm_commands_using_shell | default('false') | bool
