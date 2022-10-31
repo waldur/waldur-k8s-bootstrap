@@ -1,8 +1,10 @@
 setup_storage: yes # User can skip setup of an attached disk for storage
 storage_device_path: /dev/sdb
 storage_directory: /opt/rke2_storage
+helm_install_using_binary: no
 
 setup_rke2: yes # User can skip installation and setup of RKE2 cluster
+rke2_version: v1.24.7+rke2r1 # The version of RKE2
 setup_hosts_file: yes # If target machines can access each other by hostname, there is no need to /etc/hosts file setup
 proxy_env: {} # dict with proxy environment settings
 # Example:
