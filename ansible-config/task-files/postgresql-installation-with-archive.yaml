@@ -1,4 +1,23 @@
 # Archive-based installation
+- name: Install git
+  dnf:
+    pkg:
+      - git
+    state: installed
+  when:
+    - "'waldur/waldur-chart.zip' is not file"
+    - initial_server | default(false) | bool
+
+- name: Clone Waldur Helm repository
+  git:
+    repo: "{{ waldur_helm_repo_url | default('https://github.com/waldur/waldur-helm') }}"
+    dest: waldur_helm
+    force: yes
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - "'waldur/waldur-chart.zip' is not file"
+    - initial_server | default(false) | bool
+
 - name: Copy PostgreSQL chart archive
   copy:
     src: bitnami/postgresql-11.9.1.tgz
