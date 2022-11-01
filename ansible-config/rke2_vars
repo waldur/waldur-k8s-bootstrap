@@ -6,6 +6,7 @@ helm_commands_using_shell: no
 setup_rke2: yes # User can skip installation and setup of RKE2 cluster
 rke2_version: v1.23.13+rke2r1 # The version of RKE2
 rke2_air_gap_installation: no # Indicates if RKE2 machines are in an air-gapped environment
+# rke2_custom_root: /root/data # Path to custom location for RKE2 installation
 setup_hosts_file: yes # If target machines can access each other by hostname, there is no need to /etc/hosts file setup
 proxy_env: {} # dict with proxy environment settings
 # Example:
