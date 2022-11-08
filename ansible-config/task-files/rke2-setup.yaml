@@ -139,9 +139,11 @@
     state: present
     block: |
       {% for key, value in proxy_env.items() %}
-      {{ key }}={{ value }}
-      {{ key | upper }}={{ value }}
+      CONTAINERD_{{ key | upper }}={{ value }}
       {% endfor %}
+  when:
+    - proxy_env is defined
+    - rke2_add_containerd_proxy | default('no') | bool
 
 - name: Enable RKE2 server
   systemd:

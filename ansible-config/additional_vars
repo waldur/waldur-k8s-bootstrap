@@ -1,2 +1,0 @@
-rke2_initial_server_ip: 192.168.42.20
-rke2_initial_server_hostname: rke2-node-01.openstacklocal
