@@ -1,0 +1,20 @@
+# -*- coding: utf-8; indent-tabs-mode: nil; tab-width: 2; -*-
+
+---
+- name: Add authorized keys
+  authorized_key:
+    user: "{{ ansible_user }}"
+    state: present
+    key: "{{ item }}"
+  with_items: "{{ admin_keys | default([]) }}"
+  tags:
+    - ssh_admin
+
+- name: Revoke authorized keys
+  authorized_key:
+    user: "{{ ansible_user }}"
+    state: absent
+    key: "{{ item }}"
+  with_items: "{{ revoked_admin_keys | default([]) }}"
+  tags:
+    - ssh_admin

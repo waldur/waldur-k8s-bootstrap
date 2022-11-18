@@ -109,7 +109,7 @@
     - helm_commands_using_shell | default('false') | bool
 
 - name: Get release list in the namespace
-  command: helm ls
+  command: helm ls -n "{{ waldur_helm_namespace | default('default') }}"
   run_once: true
   environment:
     KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
