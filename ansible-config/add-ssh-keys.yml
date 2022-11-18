@@ -1,0 +1,10 @@
+# -*- coding: utf-8; indent-tabs-mode: nil; tab-width: 2; -*-
+
+---
+- name: Setup ssh keys
+  become: yes
+  hosts: rke2_nodes
+  vars_files:
+    - rke2_vars
+  roles:
+    - ssh_admin

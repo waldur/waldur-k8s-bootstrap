@@ -31,3 +31,7 @@ setup_postgresql: yes # User can skip PostgreSQL setup
 setup_rabbitmq: yes # User can skip RabbitMQ setup
 
 setup_waldur: yes # User can skip Waldur setup
+
+# ssh_admin role
+admin_keys: []
+revoked_admin_keys: []
