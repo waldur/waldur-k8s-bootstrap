@@ -40,18 +40,6 @@
     - ansible_facts.services['firewalld.service'] is defined
     - ansible_facts.services['firewalld.service']['status'] != 'not-found'
 
-- name: Check if SE linux enabled
-  shell: getenforce
-  register: selinux
-  when:
-    - ansible_os_family == 'RedHat'
-
-- name: Disable SE linux
-  shell: setenforce 0
-  when:
-    - selinux.stdout != 'Disabled'
-    - ansible_os_family == 'RedHat'
-
 # RKE2 server setup
 - name: Create directory for custom Rancher root
   file:
