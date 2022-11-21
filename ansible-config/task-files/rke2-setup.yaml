@@ -19,28 +19,38 @@
     block: |
       [keyfile]
       unmanaged-devices=interface-name:cali*;interface-name:flannel*
+  when:
+    - ansible_facts.services['NetworkManager.service'] is defined
+    - ansible_facts.services['NetworkManager.service']['status'] != 'not-found'
 
 - name: Reload Network manager
   systemd:
     service: NetworkManager
     state: reloaded
-  when: ansible_facts.services['NetworkManager.service'] is defined
+  when:
+    - ansible_facts.services['NetworkManager.service'] is defined
+    - ansible_facts.services['NetworkManager.service']['status'] != 'not-found'
 
 - name: Stop FireWall
   systemd:
     service: firewalld
     enabled: false
     state: stopped
-  when: ansible_facts.services['firewalld.service'] is defined
+  when:
+    - ansible_facts.services['firewalld.service'] is defined
+    - ansible_facts.services['firewalld.service']['status'] != 'not-found'
 
 - name: Check if SE linux enabled
   shell: getenforce
   register: selinux
+  when:
+    - ansible_os_family == 'RedHat'
 
 - name: Disable SE linux
   shell: setenforce 0
   when:
     - selinux.stdout != 'Disabled'
+    - ansible_os_family == 'RedHat'
 
 # RKE2 server setup
 - name: Create directory for custom Rancher root

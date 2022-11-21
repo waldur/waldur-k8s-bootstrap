@@ -1,9 +1,8 @@
 # Prerequisites for Archive-based installation
 - name: Install git
-  dnf:
-    pkg:
-      - git
-    state: installed
+  package:
+    name: git
+    state: present
   when:
     - "'waldur/waldur-chart.zip' is not file"
     - initial_server | default(false) | bool
