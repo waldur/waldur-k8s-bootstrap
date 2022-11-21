@@ -13,10 +13,9 @@
     helm_installed.rc != 0
 
 - name: Install tar
-  dnf:
-    pkg:
-      - tar
-    state: installed
+  package:
+    name: tar
+    state: present
 
 - name: Install Helm
   shell: |

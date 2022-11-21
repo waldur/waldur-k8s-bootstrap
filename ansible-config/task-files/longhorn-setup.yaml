@@ -3,7 +3,17 @@
   dnf:
     pkg:
       - iscsi-initiator-utils
+      - nfs-utils
     state: installed
+  when: ansible_os_family == 'RedHat'
+
+- name: Install iscsi
+  apt:
+    pkg:
+      - open-iscsi
+      - nfs-common
+    state: present
+  when: ansible_os_family == 'Debian'
 
 - name: Start iscsid
   systemd:
