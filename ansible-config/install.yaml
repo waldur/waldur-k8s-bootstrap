@@ -64,6 +64,11 @@
         - setup_rabbitmq | default(true)
         - "'bitnami/rabbitmq-10.3.5.tgz' is file"
 
+    - name: Setup MinIO
+      import_tasks: task-files/minio-installation.yaml
+      when:
+        - setup_minio | default(true)
+
     - name: Setup Waldur
       import_tasks: task-files/waldur-installation.yaml
       when: setup_waldur | default(true)
