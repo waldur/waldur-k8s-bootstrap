@@ -6,6 +6,7 @@
       - nfs-utils
     state: installed
   when: ansible_os_family == 'RedHat'
+  environment: "{{ proxy_env | default({}) }}"
 
 - name: Install iscsi
   apt:
@@ -14,6 +15,7 @@
       - nfs-common
     state: present
   when: ansible_os_family == 'Debian'
+  environment: "{{ proxy_env | default({}) }}"
 
 - name: Start iscsid
   systemd:
