@@ -67,6 +67,19 @@
   when:
     - rke2_air_gap_installation | default(true) | bool
     - "'rke2/rke2-images-canal.linux-amd64.tar.gz' is not file"
+    - (rke2_cni | default('canal')) == 'canal'
+
+- name: Download RKE2 calico archive
+  delegate_to: localhost
+  run_once: yes
+  get_url:
+    url: https://github.com/rancher/rke2/releases/download/{{ rke2_version }}/rke2-images-calico.linux-amd64.tar.gz
+    dest: rke2/rke2-images-calico.linux-amd64.tar.gz
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - rke2_air_gap_installation | default(true) | bool
+    - "'rke2/rke2-images-calico.linux-amd64.tar.gz' is not file"
+    - (rke2_cni | default('canal')) == 'calico'
 
 - name: Download RKE2 core archive
   delegate_to: localhost
@@ -92,6 +105,15 @@
     dest: /var/lib/rancher/rke2/agent/images/rke2-images-canal.linux-amd64.tar.gz
   when:
     - rke2_air_gap_installation | default(true) | bool
+    - (rke2_cni | default('canal')) == 'canal'
+
+- name: Copy RKE2 calico archive to targets
+  copy:
+    src: rke2/rke2-images-calico.linux-amd64.tar.gz
+    dest: /var/lib/rancher/rke2/agent/images/rke2-images-calico.linux-amd64.tar.gz
+  when:
+    - rke2_air_gap_installation | default(true) | bool
+    - (rke2_cni | default('canal')) == 'calico'
 
 - name: Copy RKE2 core archive to targets
   copy:
@@ -113,11 +135,13 @@
   environment: "{{ proxy_env | default({}) }}"
 
 - name: Create config file for first server
-  lineinfile:
+  blockinfile:
     path: /etc/rancher/rke2/config.yaml
     create: yes
     state: present
-    line: "token: {{ rke2_shared_token }}"
+    block: |
+      token: {{ rke2_shared_token }}
+      cni: {{ rke2_cni | default('canal') }}
   when: initial_server | default(false) | bool
 
 - name: Create config file for other servers
@@ -128,6 +152,7 @@
     block: |
       server: https://{{ rke2_initial_server_hostname }}:9345
       token: {{ rke2_shared_token }}
+      cni: {{ rke2_cni | default('canal') }}
   when: not (initial_server | default(false) | bool)
 
 - name: Create RKE2 daemon env file with proxy settings
@@ -137,7 +162,11 @@
     state: present
     block: |
       {% for key, value in proxy_env.items() %}
+      {% if key != 'no_proxy' %}
       CONTAINERD_{{ key | upper }}={{ value }}
+      {% else %}
+      CONTAINERD_{{ key | upper }}=127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,.svc,.cluster.local,{{ value }}
+      {% endif %}
       {% endfor %}
   when:
     - proxy_env is defined
