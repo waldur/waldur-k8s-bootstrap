@@ -1,0 +1,8 @@
+# -*- coding: utf-8; indent-tabs-mode: nil; tab-width: 2; -*-
+
+---
+-   name: restart haproxy
+    service: name=haproxy state=restarted
+
+-   name: reload haproxy
+    service: name=haproxy state=reloaded
