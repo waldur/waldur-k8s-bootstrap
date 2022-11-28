@@ -6,4 +6,3 @@
   tasks:
     - name: Setup Waldur
       import_tasks: task-files/waldur-installation.yaml
-      when: setup_waldur | default(true)

@@ -95,6 +95,8 @@
     else
       echo "[+] No backup cronjob was found for waldur release"
     fi
+  environment:
+    KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
   when:
     - initial_server | default(false) | bool
 
