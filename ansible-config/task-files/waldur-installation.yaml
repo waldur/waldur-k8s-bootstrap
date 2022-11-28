@@ -90,6 +90,9 @@
     values_files:
       - "./waldur_helm/waldur/values.yaml"
       - "./waldur_helm/waldur/custom-values.yaml"
+    values:
+      waldur:
+        imageTag: "{{ waldur_image_tag | default('latest') }}"
     state: present
     namespace: "{{ waldur_helm_namespace | default('default') }}"
     kubeconfig: /etc/rancher/rke2/rke2.yaml
@@ -101,7 +104,7 @@
 - name: Install Waldur release via shell
   shell: |
     export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-    helm upgrade --install waldur ./waldur_helm/waldur/ -n "{{ waldur_helm_namespace | default('default') }}" -f ./waldur_helm/waldur/values.yaml -f ./waldur_helm/waldur/custom-values.yaml --timeout 40m0s
+    helm upgrade --install waldur ./waldur_helm/waldur/ -n "{{ waldur_helm_namespace | default('default') }}" -f ./waldur_helm/waldur/values.yaml -f ./waldur_helm/waldur/custom-values.yaml --set waldur.imageTag={{ waldur_image_tag | default('latest') }} --timeout 40m0s
   environment: "{{ proxy_env | default({}) }}"
   when:
     - initial_server | default(false) | bool
