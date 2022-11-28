@@ -39,6 +39,9 @@ setup_minio: yes # User can skip MinIO setup
 # Waldur setup
 setup_waldur: yes # User can skip Waldur setup
 
+# haproxy_host role
+haproxy_stats_password: "changemedemoonly"
+
 # ssh_admin role
 admin_keys: []
 revoked_admin_keys: []

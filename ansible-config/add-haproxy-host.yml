@@ -1,0 +1,11 @@
+# -*- coding: utf-8; indent-tabs-mode: nil; tab-width: 2; -*-
+
+---
+- name: Setup HAProxy
+  become: yes
+  hosts: "{{ host_group | default('lb') }}"
+  gather_facts: false
+  vars_files:
+    - rke2_vars
+  roles:
+    - { role: haproxy_host, tags: haproxy_host, environment: "{{ proxy_env }}" }

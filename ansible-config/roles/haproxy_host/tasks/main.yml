@@ -1,0 +1,79 @@
+# -*- coding: utf-8; indent-tabs-mode: nil; tab-width: 2; -*-
+
+---
+- name: Enable package repositories (CentOS)
+  yum: name={{ item }}
+  with_items:
+    - epel-release
+  tags:
+    - repos
+    - haproxy_host
+
+- name: Install HAProxy (CentOS)
+  yum: name=haproxy state=present
+  tags:
+    - haproxy_host
+
+- name: Install HAProxy (CentOS)
+  yum: name=pyOpenSSL state=present
+  tags:
+    - haproxy_host
+
+- name: Install Python-pip (CentOS)
+  yum: name=python3-pip state=present
+  tags:
+    - haproxy_host
+
+- name: Create certs directory if it does not exist (Debian/Ubuntu)
+  file:
+    path: /etc/pki/tls/certs
+    state: directory
+    mode: '0755'
+  tags:
+    - haproxy_host
+
+- name: Generate an OpenSSL private key for HAProxy (CentOS)
+  openssl_privatekey:
+    path: /etc/pki/tls/private/haproxy.key
+  tags:
+    - tls
+    - haproxy_host
+
+- name: Generate an OpenSSL Certificate Signing Request for HAProxy (CentOS)
+  openssl_csr:
+    path: /etc/pki/tls/certs/haproxy.csr
+    privatekey_path: /etc/pki/tls/private/haproxy.key
+    common_name: "{{ inventory_hostname }}"
+  tags:
+    - tls
+    - haproxy_host
+
+- name: Generate a Self Signed OpenSSL certificate for HAProxy (CentOS)
+  openssl_certificate:
+    path: /etc/pki/tls/certs/haproxy.crt
+    privatekey_path: /etc/pki/tls/private/haproxy.key
+    csr_path: /etc/pki/tls/certs/haproxy.csr
+    provider: selfsigned
+  tags:
+    - tls
+    - haproxy_host
+
+- name:  Generate a Self Signed OpenSSL bundle (CentOS)
+  shell: "sudo cat /etc/pki/tls/certs/haproxy.crt /etc/pki/tls/private/haproxy.key > /etc/pki/tls/certs/haproxy.pem"
+  notify: reload haproxy
+  tags:
+    - tls
+    - haproxy_host
+
+- name: Configure HAProxy
+  vars:
+    backend_servers: "{{ groups['rke2_nodes'] }}"
+  template: src=haproxy.cfg dest=/etc/haproxy/haproxy.cfg
+  notify: reload haproxy
+  tags:
+    - haproxy_host
+
+- name: Enable and start HAProxy
+  service: name=haproxy state=started enabled=yes
+  tags:
+    - haproxy_host
