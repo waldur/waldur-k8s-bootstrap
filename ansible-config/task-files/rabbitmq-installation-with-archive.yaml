@@ -1,11 +1,5 @@
 # Archive-based installation
-- name: Install git
-  package:
-    name: git
-    state: present
-  when:
-    - "'waldur/waldur-chart.zip' is not file"
-    - initial_server | default(false) | bool
+- import_tasks: package-prerequisites.yaml
 
 - name: Clone Waldur Helm repository
   git:

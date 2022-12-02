@@ -1,0 +1,62 @@
+- name: Restore data from a database backup
+  hosts: "{{ host_group | default('rke2_nodes') }}"
+  become: true
+  vars_files:
+    - rke2_vars
+  tasks:
+    - block:
+      - name: Scale Waldur backend pods to 0
+        shell: |
+          kubectl scale --replicas=0 --timeout=30s -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-mastermind-api
+          kubectl scale --replicas=0 --timeout=30s -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-mastermind-worker
+          kubectl scale --replicas=0 --timeout=30s -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-mastermind-beat
+
+      - name: Fetch available backups
+        shell: |
+          kubectl exec -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-db-restore -- db-backup-minio-auth
+        register: backups
+
+      - name: List backups
+        debug:
+          msg: "{{ backups.stdout }}"
+
+      - name: Choose backup
+        pause:
+          prompt: "Please enter backup's file name"
+          echo: yes
+        register: chosen_backup
+
+      - name: Set backup_name fact
+        set_fact:
+          backup_name: "{{ chosen_backup.user_input }}"
+
+      - name: Show chosen backup
+        debug:
+          var: backup_name
+
+      - name: Copy restoration script to the RKE2 node
+        template:
+          src: db-restore/restore.sh
+          dest: restore.sh
+
+      - name: Create clean Waldur database and apply backup
+        shell: |
+          kubectl exec -n "{{ waldur_helm_namespace | default('default') }}" -i deployment/waldur-db-restore -- bash < restore.sh
+        register: db_restore
+
+      - name: Show output of database restoration script
+        debug:
+          msg: "{{ db_restore.stdout }}"
+
+      always:
+        - name: Start Waldur backend pods
+          shell: |
+            kubectl scale --replicas=1 --timeout=2m -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-mastermind-api
+            kubectl scale --replicas=1 --timeout=2m -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-mastermind-worker
+            kubectl scale --replicas=1 --timeout=2m -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-mastermind-beat
+      environment:
+        KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
+      when:
+        - initial_server | default(false) | bool
+    - name: Update Waldur
+      import_tasks: task-files/waldur-installation.yaml
