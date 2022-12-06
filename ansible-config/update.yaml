@@ -6,3 +6,15 @@
   tasks:
     - name: Setup Waldur
       import_tasks: task-files/waldur-installation.yaml
+
+    - name: Restart deployments to apply configmaps changes
+      shell: |
+        kubectl rollout restart deployment waldur-mastermind-beat
+        kubectl rollout restart deployment waldur-mastermind-api
+        kubectl rollout restart deployment waldur-homeport
+
+    - name: Restart celery
+      shell: |
+        kubectl rollout restart deployment waldur-mastermind-worker
+      when:
+        - waldur_celery_worker_enabled | default(true) | bool
