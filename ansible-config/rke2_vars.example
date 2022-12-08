@@ -31,10 +31,13 @@ k8s_dashboard_version: 5.10.0 # Version of K8s Dashboard Helm chart
 
 # Waldur dependency setup
 setup_postgresql: yes # User can skip PostgreSQL setup
+postgresql_version: 11.9.1 # Version of PostgreSQL Helm chart
 
 setup_rabbitmq: yes # User can skip RabbitMQ setup
+rabbitmq_version: 10.3.5 # Version of RabbitMQ Helm chart
 
 setup_minio: yes # User can skip MinIO setup
+minio_version: 11.10.16 # Version of MinIO Helm chart
 
 # Waldur setup
 setup_waldur: yes # User can skip Waldur setup

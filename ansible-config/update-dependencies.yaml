@@ -1,0 +1,23 @@
+- name: Update Waldur dependencies
+  hosts: "{{ host_group | default('rke2_nodes') }}"
+  become: true
+  vars_files:
+    - rke2_vars
+  tasks:
+    - name: Create Waldur backup
+      import_tasks: task-files/create-waldur-backup.yaml
+
+    - name: Update PostgreSQL
+      import_tasks: task-files/postgresql-installation.yaml
+      when:
+        - setup_postgresql | default(true)
+
+    - name: Update RabbitMQ
+      import_tasks: task-files/rabbitmq-installation.yaml
+      when:
+        - setup_rabbitmq | default(true)
+
+    - name: Update MinIO
+      import_tasks: task-files/minio-installation.yaml
+      when:
+        - setup_minio | default(true)

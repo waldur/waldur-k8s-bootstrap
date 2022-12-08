@@ -23,7 +23,7 @@
   kubernetes.core.helm:
     release_name: rmq
     chart_ref: bitnami/rabbitmq
-    chart_version: 10.3.5
+    chart_version: "{{ rabbitmq_version }}"
     state: present
     values_files:
       - ./waldur_helm/rmq-values.yaml
@@ -38,7 +38,7 @@
 - name: Install RabbitMQ release via shell
   shell: |
     export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-    helm upgrade --install rmq bitnami/rabbitmq --version 10.3.5 -n "{{ waldur_helm_namespace | default('default') }}" -f waldur_helm/rmq-values.yaml
+    helm upgrade --install rmq bitnami/rabbitmq --version "{{ rabbitmq_version }}" -n "{{ waldur_helm_namespace | default('default') }}" -f waldur_helm/rmq-values.yaml
   environment: "{{ proxy_env | default({}) }}"
   when:
     - initial_server | default(false) | bool

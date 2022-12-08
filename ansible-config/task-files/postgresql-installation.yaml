@@ -23,7 +23,7 @@
   kubernetes.core.helm:
     release_name: postgresql
     chart_ref: bitnami/postgresql
-    chart_version: 11.9.1
+    chart_version: "{{ postgresql_version }}"
     state: present
     values_files:
       - ./waldur_helm/postgresql-values.yaml
@@ -38,7 +38,7 @@
   shell: |
     export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
     kubectl create namespace "{{ waldur_helm_namespace | default('default') }}" || true
-    helm upgrade --install postgresql bitnami/postgresql --version 11.9.1 -n "{{ waldur_helm_namespace | default('default') }}" -f waldur_helm/postgresql-values.yaml
+    helm upgrade --install postgresql bitnami/postgresql --version "{{ postgresql_version }}" -n "{{ waldur_helm_namespace | default('default') }}" -f waldur_helm/postgresql-values.yaml
   environment: "{{ proxy_env | default({}) }}"
   when:
     - initial_server | default(false) | bool

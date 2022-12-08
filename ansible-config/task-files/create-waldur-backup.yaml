@@ -1,0 +1,20 @@
+- name: Create Waldur backup
+  shell: |
+    BACKUP_CRONJOB_NAME=$(kubectl get cronjobs.batch waldur-db-backup-cronjob -n "{{ waldur_helm_namespace | default('default') }}" -o name --ignore-not-found)
+    if [ "$BACKUP_CRONJOB_NAME" ]; then
+      echo "[+] Creating backup cronjob for waldur release"
+      export JOB_NAME=waldur-db-backup-$(date +"%m-%d-%Y-%H-%M")
+      kubectl create job --from=$BACKUP_CRONJOB_NAME $JOB_NAME
+      kubectl wait --for=condition=complete --timeout=30m job/$JOB_NAME
+      kubectl delete job $JOB_NAME
+    else
+      echo "[+] No backup cronjob was found for waldur release"
+      exit 1
+    fi
+  environment:
+    KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
+  changed_when: backup_created.rc == 0
+  failed_when: backup_created.rc not in [0, 1]
+  register: backup_created
+  when:
+    - initial_server | default(false) | bool

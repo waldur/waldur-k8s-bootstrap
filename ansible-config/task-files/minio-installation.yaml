@@ -16,7 +16,7 @@
   kubernetes.core.helm:
     release_name: minio
     chart_ref: bitnami/minio
-    chart_version: 11.10.16
+    chart_version: "{{ minio_version }}"
     state: present
     values_files:
       - minio-values.yaml
@@ -31,7 +31,7 @@
   shell: |
     export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
     kubectl create namespace "{{ waldur_helm_namespace | default('default') }}" || true
-    helm upgrade --install minio bitnami/minio --version 11.10.16 -n "{{ waldur_helm_namespace | default('default') }}" -f minio-values.yaml
+    helm upgrade --install minio bitnami/minio --version "{{ minio_version }}" -n "{{ waldur_helm_namespace | default('default') }}" -f minio-values.yaml
   environment: "{{ proxy_env | default({}) }}"
   when:
     - initial_server | default(false) | bool
