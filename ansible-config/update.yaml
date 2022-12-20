@@ -14,6 +14,8 @@
         kubectl rollout restart deployment waldur-homeport
       environment:
         KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
+      when:
+        - initial_server | default(false) | bool
 
     - name: Restart celery
       shell: |
@@ -22,3 +24,4 @@
         KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
       when:
         - waldur_celery_worker_enabled | default(true) | bool
+        - initial_server | default(false) | bool
