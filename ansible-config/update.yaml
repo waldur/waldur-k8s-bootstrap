@@ -12,9 +12,13 @@
         kubectl rollout restart deployment waldur-mastermind-beat
         kubectl rollout restart deployment waldur-mastermind-api
         kubectl rollout restart deployment waldur-homeport
+      environment:
+        KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
 
     - name: Restart celery
       shell: |
         kubectl rollout restart deployment waldur-mastermind-worker
+      environment:
+        KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
       when:
         - waldur_celery_worker_enabled | default(true) | bool
