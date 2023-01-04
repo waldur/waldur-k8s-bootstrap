@@ -25,7 +25,7 @@
   kubernetes.core.helm:
     release_name: loki
     chart_ref: grafana/loki-stack
-    chart_version: "{{ loki_prom_grafana_version }}"
+    chart_version: "{{ loki_grafana_version }}"
     state: present
     values_files:
       - loki-values.yaml
@@ -39,7 +39,7 @@
   shell: |
     export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
     kubectl create namespace "{{ waldur_helm_namespace | default('default') }}" || true
-    helm upgrade --install loki --values loki-values.yaml --version "{{ loki_prom_grafana_version }}" grafana/loki-stack -n "{{ waldur_helm_namespace | default('default') }}"
+    helm upgrade --install loki --values loki-values.yaml --version "{{ loki_grafana_version }}" grafana/loki-stack -n "{{ waldur_helm_namespace | default('default') }}"
   environment: "{{ proxy_env | default({}) }}"
   when:
     - helm_commands_using_shell | default('false') | bool
