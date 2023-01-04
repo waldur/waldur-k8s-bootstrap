@@ -5,8 +5,6 @@
     repo_url: https://kubernetes.github.io/dashboard/
     repo_state: present
   environment: "{{ proxy_env | default({}) }}"
-  when:
-    - initial_server | default(false) | bool
 
 - name: Install k8s dashboard release
   kubernetes.core.helm:
@@ -18,8 +16,8 @@
     update_repo_cache: true
     create_namespace: true
     kubeconfig: /etc/rancher/rke2/rke2.yaml
+  environment: "{{ proxy_env | default({}) }}"
   when:
-    - initial_server | default(false) | bool
     - not (helm_commands_using_shell | default('false') | bool)
 
 - name: Install k8s dashboard release via shell
@@ -29,5 +27,17 @@
     helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --version "{{ k8s_dashboard_version }}" -n kubernetes-dashboard
   environment: "{{ proxy_env | default({}) }}"
   when:
-    - initial_server | default(false) | bool
     - helm_commands_using_shell | default('false') | bool
+
+- name: Copy dashboard initialization files
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: 'kubernetes-dashboard/crb.yaml', dest: 'k8s-dashboard-crb.yaml' }
+    - { src: 'kubernetes-dashboard/service-account.yaml', dest: 'k8s-dashboard-service-account.yaml' }
+
+- name: Create K8s dashboard account
+  shell: |
+    kubectl apply -f k8s-dashboard-crb.yaml
+    kubectl apply -f k8s-dashboard-service-account.yaml
+  environment:
+    KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"

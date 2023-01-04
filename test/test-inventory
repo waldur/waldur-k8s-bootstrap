@@ -1,0 +1,16 @@
+[all:vars]
+ansible_ssh_common_args=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -i ../.ssh/id_waldur_dev_ssh_pkey -W %h:%p -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null rocky@{{ lookup('env','GW_IP') }}"
+ansible_user=rocky
+
+[lb]
+rke2-waldur-test-lb01 ansible_host=192.168.42.1
+
+[lb:vars]
+expose_k8s_api=true
+expose_k8s_dashboard=true
+
+[rke2_nodes]
+k8s-test-n1 ansible_host=192.168.42.2 initial_server=true
+k8s-test-n2 ansible_host=192.168.42.3
+k8s-test-n3 ansible_host=192.168.42.4
+

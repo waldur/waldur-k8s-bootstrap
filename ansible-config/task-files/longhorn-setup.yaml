@@ -1,14 +1,14 @@
 # Longhorn prerequisites
-- name: Install iscsi
+- name: Install iscsi (RedHat)
   dnf:
     pkg:
       - iscsi-initiator-utils
       - nfs-utils
     state: installed
-  when: ansible_os_family == 'RedHat'
+  when: ansible_os_family == 'RedHat' or ansible_os_family == 'Rocky'
   environment: "{{ proxy_env | default({}) }}"
 
-- name: Install iscsi
+- name: Install iscsi (Debian)
   apt:
     pkg:
       - open-iscsi
@@ -24,6 +24,10 @@
     state: started
 
 # Longhorn installation
+- name: Selecting initial server from inventory
+  set_fact:
+    initial_server: "{{ hostvars.values() | selectattr('initial_server', 'defined') }}"
+
 - name: Add Longhorn repository
   kubernetes.core.helm_repository:
     repo_name: longhorn
@@ -31,7 +35,7 @@
     repo_state: present
   environment: "{{ proxy_env | default({}) }}"
   when:
-    - initial_server | default(false) | bool
+    - inventory_hostname == initial_server[0].inventory_hostname
 
 - name: Install Longhorn release
   kubernetes.core.helm:
@@ -50,7 +54,7 @@
         defaultDataPath: "{{ storage_directory }}"
   environment: "{{ proxy_env | default({}) }}"
   when:
-    - initial_server | default(false) | bool
+    - inventory_hostname == initial_server[0].inventory_hostname
     - not (helm_commands_using_shell | default('false') | bool)
 
 - name: Install Longhorn release via shell
@@ -60,5 +64,5 @@
     helm upgrade --install longhorn longhorn/longhorn --version "{{ longhorn_version }}" -n longhorn-system --set defaultSettings.defaultDataPath="{{ storage_directory }}" --set csi.kubeletRootDir=/var/lib/kubelet/
   environment: "{{ proxy_env | default({}) }}"
   when:
-    - initial_server | default(false) | bool
+    - inventory_hostname == initial_server[0].inventory_hostname
     - helm_commands_using_shell | default('false') | bool

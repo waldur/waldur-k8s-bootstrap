@@ -8,7 +8,6 @@
     state: installed
   when:
     - "'waldur/waldur-chart.zip' is file"
-    - initial_server | default(false) | bool
 
 # Archive-based installation
 - name: Unarchive Waldur Helm chart
@@ -23,7 +22,6 @@
   command: mv waldur-helm-master waldur_helm
   when:
     - "'waldur/waldur-chart.zip' is file"
-    - initial_server | default(false) | bool
 
 # Repo-based installation
 - name: Clone Waldur Helm repository
@@ -34,15 +32,12 @@
   environment: "{{ proxy_env | default({}) }}"
   when:
     - "'waldur/waldur-chart.zip' is not file"
-    - initial_server | default(false) | bool
 
 - name: Create an empty file for custom Waldur values
   copy:
     content: ""
     dest: waldur_helm/waldur/custom-values.yaml
     force: yes
-  when:
-    - initial_server | default(false) | bool
 
 - name: Copy custom Waldur chart values
   copy:
@@ -50,7 +45,6 @@
     dest: waldur_helm/waldur/custom-values.yaml
   when:
     - "'waldur/values.yaml' is file"
-    - initial_server | default(false) | bool
 
 - name: Find custom config directories
   find:
@@ -59,13 +53,11 @@
   delegate_to: localhost
   become: no
   register: find_result
-  when: initial_server | default(false) | bool
 
 - name: Print found config directories
   debug: msg="{{ item.path }}"
   with_items: "{{ find_result.files }}"
   when:
-    - initial_server | default(false) | bool
     - find_result.matched > 0
 
 - name: Copy config directories
@@ -74,7 +66,6 @@
     src: "{{ item.path }}"
   with_items: "{{ find_result.files }}"
   when:
-    - initial_server | default(false) | bool
     - find_result.matched > 0
 
 - import_tasks: create-waldur-backup.yaml
@@ -94,7 +85,6 @@
     kubeconfig: /etc/rancher/rke2/rke2.yaml
     timeout: 30m0s
   when:
-    - initial_server | default(false) | bool
     - not (helm_commands_using_shell | default('false') | bool)
 
 - name: Install Waldur release via shell
@@ -103,7 +93,6 @@
     helm upgrade --install waldur ./waldur_helm/waldur/ -n "{{ waldur_helm_namespace | default('default') }}" -f ./waldur_helm/waldur/values.yaml -f ./waldur_helm/waldur/custom-values.yaml --set waldur.imageTag={{ waldur_image_tag | default('latest') }} --timeout 40m0s
   environment: "{{ proxy_env | default({}) }}"
   when:
-    - initial_server | default(false) | bool
     - helm_commands_using_shell | default('false') | bool
 
 - name: Get release list in the namespace
@@ -122,5 +111,3 @@
   file:
     path: waldur_helm
     state: absent
-  when:
-    - initial_server | default(false) | bool

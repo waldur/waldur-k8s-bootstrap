@@ -5,16 +5,31 @@
     - rke2_vars
   tasks:
     - block:
+      - name: Selecting initial server from inventory
+        set_fact:
+          initial_server: "{{ hostvars.values() | selectattr('initial_server', 'defined') }}"
+
+      - debug:
+          msg: "{{ initial_server[0].ansible_host }} {{ initial_server[0].inventory_hostname }}"
+
       - name: Scale Waldur backend pods to 0
+        environment:
+          KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
         shell: |
           kubectl scale --replicas=0 --timeout=30s -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-mastermind-api
           kubectl scale --replicas=0 --timeout=30s -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-mastermind-worker
           kubectl scale --replicas=0 --timeout=30s -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-mastermind-beat
+        when:
+          - inventory_hostname == initial_server[0].inventory_hostname
 
       - name: Fetch available backups
+        environment:
+          KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
         shell: |
           kubectl exec -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-db-restore -- db-backup-minio-auth
         register: backups
+        when:
+          - inventory_hostname == initial_server[0].inventory_hostname
 
       - name: List backups
         debug:
@@ -40,6 +55,8 @@
           dest: restore.sh
 
       - name: Create clean Waldur database and apply backup
+        environment:
+          KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
         shell: |
           kubectl exec -n "{{ waldur_helm_namespace | default('default') }}" -i deployment/waldur-db-restore -- bash < restore.sh
         register: db_restore
@@ -56,7 +73,10 @@
             kubectl scale --replicas=1 --timeout=2m -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-mastermind-beat
       environment:
         KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
-      when:
-        - initial_server | default(false) | bool
+        when:
+          - inventory_hostname == initial_server[0].inventory_hostname
+
     - name: Update Waldur
       import_tasks: task-files/waldur-installation.yaml
+      when:
+        - inventory_hostname == initial_server[0].inventory_hostname

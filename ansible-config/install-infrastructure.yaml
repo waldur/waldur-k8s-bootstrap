@@ -1,0 +1,22 @@
+- name: Setup RKE2 node with Longhorn
+  hosts: "{{ host_group | default('rke2_nodes') }}"
+  become: true
+  vars_files:
+    - rke2_vars
+  tasks:
+    - name: Setup disk for storage
+      import_tasks: task-files/disk-setup.yaml
+      when: setup_storage | default(true)
+
+    - name: Setup RKE2
+      import_tasks: task-files/rke2-setup.yaml
+      when: setup_rke2 | default(true)
+
+    - name: Setup Helm
+      import_tasks: task-files/helm-installation.yaml
+      when: setup_helm | default(true)
+
+    - name: Setup Longhorn
+      import_tasks: task-files/longhorn-setup.yaml
+      when:
+        - setup_longhorn | default(true)

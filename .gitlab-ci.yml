@@ -22,3 +22,40 @@ Upload docs:
     - git commit -m 'Update REK2 bootstrap docs' || exit 0
     - git branch new-rke2-bootstrap-docs
     - git push --set-upstream origin new-rke2-bootstrap-docs:master
+
+Test deployment:
+  image: registry.hpc.ut.ee/mirror/opennode/k8s-deployment:0.1.6
+  stage: test
+  interruptible: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+    # If tagged release
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+    # If event is related to a created merge request
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  script:
+    - ansible-playbook -D -M /usr/local/lib/python3.8/site-packages -i test/test-inventory test/prepare-nodes.yaml
+    - cat test/test-inventory
+    - sleep 5
+    - mkdir -p .ssh
+    - cp -vf $WALDUR_DEV_SSH_PKEY .ssh/id_waldur_dev_ssh_pkey
+    - cp -vf $WALDUR_DEV_SSH_PUBKEY .ssh/id_waldur_dev_ssh_pkey.pub
+    - chmod 600 .ssh/id_waldur_dev_ssh_pkey
+    - ansible-galaxy collection install kubernetes.core
+    - curl -o rke2/rke2-install.sh --create-dirs https://get.rke2.io
+    - cp -vf test/test-inventory ansible-config/rke2_inventory
+    - cp -vf ansible-config/rke2_vars.example ansible-config/rke2_vars
+    - sed -i "s/public.lb.waldur.example.com/$LB_NAME/" ansible-config/rke2_vars
+    - cp -vf test/waldur-values.yaml ansible-config/waldur/values.yaml
+    - cd ansible-config
+    - ansible-playbook -D -i rke2_inventory install-infrastructure.yaml --key-file ../.ssh/id_waldur_dev_ssh_pkey
+    - sleep 60
+    - ansible-playbook -D -i rke2_inventory install-applications.yaml --key-file ../.ssh/id_waldur_dev_ssh_pkey
+    - ansible-playbook -D -i rke2_inventory add-haproxy-host.yml --key-file ../.ssh/id_waldur_dev_ssh_pkey
+    - ansible k8s-test-n1 -i rke2_inventory --become --key-file ../.ssh/id_waldur_dev_ssh_pkey -m fetch -a 'src=/etc/rancher/rke2/rke2.yaml dest=rke2-test-kubeconfig.yaml flat=yes'
+    - sed -i "s/127.0.0.1/$LB_NAME/" rke2-test-kubeconfig.yaml
+    - sed -i "s/default/rke2-waldur-test/g" rke2-test-kubeconfig.yaml
+    - rm -fv ../.ssh/id_waldur_dev_ssh_pkey ../.ssh/id_waldur_dev_ssh_pkey.pub
+  artifacts:
+    paths:
+      - ansible-config/rke2-test-kubeconfig.yaml

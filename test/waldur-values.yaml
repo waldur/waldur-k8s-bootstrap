@@ -1,0 +1,13 @@
+apiScheme: "https"
+homeportScheme: "https"
+apiHostname: "rke2-waldur-test-lb01.cloud.ut.ee"
+homeportHostname: "rke2-waldur-test-lb01.cloud.ut.ee"
+
+ingress:
+  tls:
+    source: secret
+waldur:
+  secretKey: "test-only"
+
+global:
+  imageRegistry: "registry.hpc.ut.ee/mirror"

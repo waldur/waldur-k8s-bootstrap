@@ -4,7 +4,6 @@
 - name: Setup HAProxy
   become: yes
   hosts: "{{ host_group | default('lb') }}"
-  gather_facts: false
   vars_files:
     - rke2_vars
   roles:
