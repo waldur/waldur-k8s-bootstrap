@@ -1,15 +1,6 @@
-- name: Check if git installed
-  shell: command -v git
-  register: git_installed
-  ignore_errors: yes
-  when:
-    - initial_server | default(false) | bool
-
-- name: Install git
+- name: Install required packages
   package:
-    name: git
+    name:
+      - git
+      - tar
     state: present
-  when:
-    - "'waldur/waldur-chart.zip' is not file"
-    - git_installed is failed
-    - initial_server | default(false) | bool

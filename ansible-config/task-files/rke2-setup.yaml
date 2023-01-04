@@ -1,12 +1,37 @@
 # RKE2 prerequisites
+- name: Selecting initial server from inventory
+  set_fact:
+    initial_server: "{{ hostvars.values() | selectattr('initial_server', 'defined') }}"
+  tags:
+    - rke2_setup
+
+- debug:
+    msg: "{{ initial_server[0].ansible_host }} {{ initial_server[0].inventory_hostname }}"
+  tags:
+    - rke2_setup
+
 - name: Add first server IP to hosts
   lineinfile:
     path: /etc/hosts
     state: present
-    line: "{{ rke2_initial_server_ip }}    {{ rke2_initial_server_hostname }}"
+    line: "{{ initial_server[0].ansible_host }} {{ initial_server[0].inventory_hostname }}"
   when:
     - setup_hosts_file | default(true) | bool
-    - not (initial_server | default(false) | bool)
+    - inventory_hostname != initial_server[0].inventory_hostname
+  tags:
+    - rke2_setup
+
+- name: Download RKE2 installer
+  local_action:
+    module: get_url
+    url: https://get.rke2.io
+    dest: "{{ playbook_dir }}/rke2/rke2-install.sh"
+    force: false
+    mode: '0755'
+    backup: true
+  environment: "{{ proxy_env | default({}) }}"
+  become: no
+  run_once: true
 
 - name: Gather service facts
   service_facts:
@@ -31,7 +56,7 @@
     - ansible_facts.services['NetworkManager.service'] is defined
     - ansible_facts.services['NetworkManager.service']['status'] != 'not-found'
 
-- name: Stop FireWall
+- name: Stop Firewall
   systemd:
     service: firewalld
     enabled: false
@@ -124,15 +149,19 @@
 
 - name: Upload RKE2 installer
   copy:
-    src: rke2/rke2-install.sh
+    src: "{{ playbook_dir }}/rke2/rke2-install.sh"
     dest: /tmp/rke2-install.sh
-    mode: 0777
+    mode: 0770
 
 - name: Run installer
-  shell: |
-     export INSTALL_RKE2_VERSION="{{ rke2_version }}"
-     /tmp/rke2-install.sh
-  environment: "{{ proxy_env | default({}) }}"
+  vars:
+    rke_env:
+      INSTALL_RKE2_VERSION: "{{ rke2_version }}"
+  command: /tmp/rke2-install.sh
+  environment:
+     "{{ proxy_env | default({}) | combine(rke_env) }}"
+  tags:
+    - rke2_setup
 
 - name: Create config file for first server
   blockinfile:
@@ -142,7 +171,14 @@
     block: |
       token: {{ rke2_shared_token }}
       cni: {{ rke2_cni | default('canal') }}
-  when: initial_server | default(false) | bool
+      {% if expose_k8s_api %}
+      tls-san:
+        - {{ lb_public_domain_name }}
+      {% endif %}
+  when:
+    - inventory_hostname == initial_server[0].inventory_hostname
+  tags:
+    - rke2_setup
 
 - name: Create config file for other servers
   blockinfile:
@@ -150,10 +186,16 @@
     create: yes
     state: present
     block: |
-      server: https://{{ rke2_initial_server_hostname }}:9345
+      server: https://{{ initial_server[0].inventory_hostname }}:9345
       token: {{ rke2_shared_token }}
       cni: {{ rke2_cni | default('canal') }}
-  when: not (initial_server | default(false) | bool)
+      {% if expose_k8s_api %}
+      tls-san:
+        - {{ lb_public_domain_name }}
+      {% endif %}
+  when: inventory_hostname != initial_server[0].inventory_hostname
+  tags:
+    - rke2_setup
 
 - name: Create RKE2 daemon env file with proxy settings
   blockinfile:
@@ -171,35 +213,57 @@
   when:
     - proxy_env is defined
     - rke2_add_containerd_proxy | default('no') | bool
+  tags:
+    - rke2_setup
 
 - name: Enable RKE2 server
   systemd:
     service: rke2-server.service
     enabled: yes
+  tags:
+    - rke2_setup
 
 - name: Start RKE2 initial server
   systemd:
     service: rke2-server.service
     state: started
   # It is required to run initial server before others
-  when: initial_server | default(false) | bool
+  when: inventory_hostname == initial_server[0].inventory_hostname
+  tags:
+    - rke2_setup
 
 - name: Pause before launching of additional RKE2 servers
   pause:
-    seconds: 10
+    seconds: 20
+  tags:
+    - rke2_setup
 
 - name: Start RKE2 additional servers
   throttle: 1
   systemd:
     service: rke2-server.service
     state: started
-  when: not (initial_server | default(false) | bool)
+  when: inventory_hostname != initial_server[0].inventory_hostname
+  register: start_server
+  tags:
+    - rke2_setup
+
+- name: sleep for 60 seconds and continue with play
+  become: no
+  wait_for:
+    timeout: 60
+  delegate_to: localhost
+  when: start_server.changed
+  tags:
+    - rke2_setup
 
 - name: Link kubectl binary
   file:
     src: /var/lib/rancher/rke2/bin/kubectl
     dest: /bin/kubectl
     state: link
+  tags:
+    - rke2_setup
 
 - name: Check status of the cluster nodes
   command: kubectl get nodes
@@ -207,13 +271,19 @@
   environment:
     KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
   run_once: true
+  tags:
+    - rke2_setup
 
 - name: View k8s nodes
   debug:
     msg: "{{ nodes_status.stdout }}"
   run_once: true
+  tags:
+    - rke2_setup
 
 - name: Copy custom NGINX controller config
   copy:
     src: rke2/nginx-helm-chart-config.yaml
     dest: /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx-config.yaml
+  tags:
+    - rke2_setup

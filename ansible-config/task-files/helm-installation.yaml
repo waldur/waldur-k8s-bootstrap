@@ -1,45 +1,41 @@
 # Helm installation
+- import_tasks: package-prerequisites.yaml
+
+- name: Download Helm utility
+  local_action:
+    module: get_url
+    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: "{{ playbook_dir }}/helm/get-helm.sh"
+    force: false
+    mode: '0755'
+    backup: true
+  environment: "{{ proxy_env | default({}) }}"
+  become: no
+  run_once: true
+
 - name: Check if Helm is installed
   command: which helm
   changed_when: false
   failed_when: helm_installed.rc not in [0, 1]
   register: helm_installed
 
-- name: Download Helm installer
+- name: Copy Helm installer to nodes
   copy:
     src: helm/get-helm.sh
     dest: /tmp/get-helm.sh
+    mode: 0770
   when:
     helm_installed.rc != 0
 
-- name: Install tar
-  package:
-    name: tar
-    state: present
-
 - name: Install Helm
-  shell: |
-    HELM_INSTALL_DIR=/usr/bin sh /tmp/get-helm.sh
-  environment: "{{ proxy_env | default({}) }}"
+  vars:
+    helm_vars:
+      HELM_INSTALL_DIR: /usr/bin
+  command: /tmp/get-helm.sh
+  environment: "{{ proxy_env | default({}) | combine(helm_vars) }}"
   when:
     helm_installed.rc != 0
   ignore_errors: yes
-
-- name: Check if Helm is installed
-  command: which helm
-  changed_when: false
-  failed_when: helm_installed.rc not in [0, 1]
-  register: helm_installed
-
-- name: Install Helm from archive
-  shell: |
-    curl -L -o helm-installer.tar.gz https://get.helm.sh/helm-v3.10.1-linux-amd64.tar.gz
-    tar -zxvf helm-installer.tar.gz
-    mv linux-amd64/helm /usr/bin
-    rm -rf linux-amd64/
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    helm_installed.rc != 0
 
 - name: Fetch Helm releases
   command: helm ls

@@ -1,30 +1,20 @@
 # -*- coding: utf-8; indent-tabs-mode: nil; tab-width: 2; -*-
 
 ---
-- name: Enable package repositories (CentOS)
-  yum: name={{ item }}
-  with_items:
-    - epel-release
-  tags:
-    - repos
-    - haproxy_host
-
-- name: Install HAProxy (CentOS)
-  yum: name=haproxy state=present
+- name: Install required packages
+  package:
+    name:
+      - haproxy
+    state: present
   tags:
     - haproxy_host
 
-- name: Install HAProxy (CentOS)
-  yum: name=pyOpenSSL state=present
-  tags:
-    - haproxy_host
+- name: Put SELinux in permissive mode, logging actions that would be blocked.
+  ansible.posix.selinux:
+    policy: targeted
+    state: permissive
 
-- name: Install Python-pip (CentOS)
-  yum: name=python3-pip state=present
-  tags:
-    - haproxy_host
-
-- name: Create certs directory if it does not exist (Debian/Ubuntu)
+- name: Create certs directory if it does not exist
   file:
     path: /etc/pki/tls/certs
     state: directory
@@ -32,14 +22,14 @@
   tags:
     - haproxy_host
 
-- name: Generate an OpenSSL private key for HAProxy (CentOS)
+- name: Generate an OpenSSL private key for HAProxy
   openssl_privatekey:
     path: /etc/pki/tls/private/haproxy.key
   tags:
     - tls
     - haproxy_host
 
-- name: Generate an OpenSSL Certificate Signing Request for HAProxy (CentOS)
+- name: Generate an OpenSSL Certificate Signing Request for HAProxy
   openssl_csr:
     path: /etc/pki/tls/certs/haproxy.csr
     privatekey_path: /etc/pki/tls/private/haproxy.key
@@ -48,7 +38,7 @@
     - tls
     - haproxy_host
 
-- name: Generate a Self Signed OpenSSL certificate for HAProxy (CentOS)
+- name: Generate a Self Signed OpenSSL certificate for HAProxy
   openssl_certificate:
     path: /etc/pki/tls/certs/haproxy.crt
     privatekey_path: /etc/pki/tls/private/haproxy.key
@@ -58,12 +48,19 @@
     - tls
     - haproxy_host
 
-- name:  Generate a Self Signed OpenSSL bundle (CentOS)
-  shell: "sudo cat /etc/pki/tls/certs/haproxy.crt /etc/pki/tls/private/haproxy.key > /etc/pki/tls/certs/haproxy.pem"
+- name:  Generate a Self Signed OpenSSL bundle
+  shell: cat /etc/pki/tls/certs/haproxy.crt /etc/pki/tls/private/haproxy.key > /etc/pki/tls/certs/haproxy.pem
+  become: yes
+  args:
+    creates: /etc/pki/tls/certs/haproxy.pem"
   notify: reload haproxy
   tags:
     - tls
     - haproxy_host
+
+- name: Selecting initial server from inventory
+  set_fact:
+    initial_server: "{{ hostvars.values() | selectattr('initial_server', 'defined') }}"
 
 - name: Configure HAProxy
   vars:
@@ -77,3 +74,15 @@
   service: name=haproxy state=started enabled=yes
   tags:
     - haproxy_host
+
+- name: Gather service facts
+  service_facts:
+
+- name: Stop Firewall
+  systemd:
+    service: firewalld
+    enabled: false
+    state: stopped
+  when:
+    - ansible_facts.services['firewalld.service'] is defined
+    - ansible_facts.services['firewalld.service']['status'] != 'not-found'
