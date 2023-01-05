@@ -46,6 +46,18 @@
   when:
     - "'waldur/values.yaml' is file"
 
+- name: Add proxy env in custom values file
+  blockinfile:
+    path: waldur_helm/waldur/custom-values.yaml
+    state: present
+    block: |
+      proxy:
+        httpsProxy: {{ proxy_env['https_proxy'] | default('') }}
+        httpProxy: {{ proxy_env['http_proxy'] | default('') }}
+        noProxy: {{ proxy_env['no_proxy'] | default('') }}
+  when:
+    - proxy_env is defined
+
 - name: Find custom config directories
   find:
     paths: waldur/
