@@ -7,6 +7,12 @@ loki:
 grafana:
   enabled: true
 
+prometheus:
+  enabled: true
+  server:
+    persistentVolume:
+      enabled: false
+
 loki:
   persistence:
     enabled: true

@@ -5,21 +5,10 @@
     repo_url: https://grafana.github.io/helm-charts
   environment: "{{ proxy_env | default({}) }}"
 
-- name: Add Prometheus repository
-  kubernetes.core.helm_repository:
-    repo_name: prometheus-community
-    repo_url: https://prometheus-community.github.io/helm-charts
-  environment: "{{ proxy_env | default({}) }}"
-
 - name: Copy custom Loki configuration
   copy:
     src: loki/values.yaml
     dest: loki-values.yaml
-
-- name: Copy custom Prometheus configuration
-  copy:
-    src: prometheus/values.yaml
-    dest: prometheus-values.yaml
 
 - name: Install Loki and Grafana release
   kubernetes.core.helm:
@@ -40,29 +29,6 @@
     export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
     kubectl create namespace "{{ waldur_helm_namespace | default('default') }}" || true
     helm upgrade --install loki --values loki-values.yaml --version "{{ loki_grafana_version }}" grafana/loki-stack -n "{{ waldur_helm_namespace | default('default') }}"
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - helm_commands_using_shell | default('false') | bool
-
-- name: Install Prometheus release
-  kubernetes.core.helm:
-    release_name: prometheus
-    chart_ref: prometheus-community/prometheus
-    chart_version: "{{ prometheus_version }}"
-    state: present
-    values_files:
-      - prometheus-values.yaml
-    namespace: "{{ waldur_helm_namespace | default('default') }}"
-    kubeconfig: /etc/rancher/rke2/rke2.yaml
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - not (helm_commands_using_shell | default('false') | bool)
-
-- name: Install Prometheus release via shell
-  shell: |
-    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-    kubectl create namespace "{{ waldur_helm_namespace | default('default') }}" || true
-    helm upgrade --install prometheus --values prometheus-values.yaml --version "{{ prometheus_version }}" prometheus-community/prometheus -n "{{ waldur_helm_namespace | default('default') }}"
   environment: "{{ proxy_env | default({}) }}"
   when:
     - helm_commands_using_shell | default('false') | bool
