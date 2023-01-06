@@ -15,13 +15,6 @@ prometheus:
     persistentVolume:
       enabled: false
 
-loki:
-  persistence:
-    enabled: true
-    size: 5Gi
-  serviceMonitor:
-    enabled: true
-
 promtail:
   enabled: true
   extraScrapeConfigs:
