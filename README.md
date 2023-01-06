@@ -58,7 +58,7 @@ If you run Waldur in a different namespace, please adjust the value of the `-n` 
 ## Add admin ssh keys
 
 1. Setup `admin_keys` and `revoked_admin_keys` vars in the `ansible-config/rke2_vars` file
-1. Run the corresponding playbook
+2. Run the corresponding playbook
 
     ```bash
     cd ansible-config
@@ -68,7 +68,7 @@ If you run Waldur in a different namespace, please adjust the value of the `-n` 
 ## Add haproxy load balancer
 
 1. Setup `haproxy_stats_password` var in the `ansible-config/rke2_vars` file
-1. Run the corresponding playbook
+2. Run the corresponding playbook
 
     ```bash
     cd ansible-config
@@ -95,7 +95,7 @@ ansible-playbook -D -i rke2_inventory update-waldur.yaml
 To update Waldur dependencies, a user should:
 
 1. Setup the desired components for update in `ansible-config/rke2_vars` file, e.g. set `setup_postgresql` to `yes` in case of PostgreSQL Helm chart update. **NB: please, don't change chart versions manually, it can cause failure of Waldur application**
-1. Run the corresponding playbook:
+2. Run the corresponding playbook:
 
     ```bash
     cd ansible-config
