@@ -3,6 +3,9 @@ loki:
     replication_factor: 1
   storage:
     type: 'filesystem'
+  table_manager:
+    retention_deletes_enabled: true
+    retention_period: 2520h  # 15 weeks
 
 grafana:
   enabled: true
