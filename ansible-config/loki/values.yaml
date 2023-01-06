@@ -6,6 +6,8 @@ loki:
 
 grafana:
   enabled: true
+  rbac:
+    pspEnabled: false
 
 prometheus:
   enabled: true
