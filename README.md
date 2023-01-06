@@ -28,6 +28,7 @@ To install Waldur on top of [RKE2](https://docs.rke2.io/) you need to:
     curl -L -o ansible-galaxy/ansible-posix-1.4.0.tar.gz https://galaxy.ansible.com/download/ansible-posix-1.4.0.tar.gz
     ansible-galaxy collection install ansible-galaxy/ansible-posix-1.4.0.tar.gz
     ```
+
 5. Adjust variables in `ansible-config/rke2_vars` file
 
 6. (Optional) Run the playbook to setup infrastructure (Kubernetes and Longhorn):
@@ -153,7 +154,7 @@ kubectl logs --tail 100 -l app=waldur-mastermind-worker -n default
 To update the SSL certificates, please do the following steps:
 
 1. Copy the certificates and keys to the `ansible-config/waldur/tls` directory. **NB: key must be named `tls.key` and cert itself - `tls.crt`**
-1. [Update Waldur release](#update-of-waldur)
+2. [Update Waldur release](#update-of-waldur)
 
 ## Enable K8s dashboard
 
