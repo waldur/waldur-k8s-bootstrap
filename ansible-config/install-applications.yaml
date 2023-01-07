@@ -17,6 +17,12 @@
         - setup_k8s_dashboard | default(true)
         - inventory_hostname == initial_server[0].inventory_hostname
 
+    - name: Setup Loki, Grafana, Prometheus
+      import_tasks: task-files/loki-installation.yaml
+      when:
+        - setup_loki_prom_grafana | default(true)
+        - inventory_hostname == initial_server[0].inventory_hostname
+
     - name: Setup PostgreSQL
       import_tasks: task-files/postgresql-installation.yaml
       when:

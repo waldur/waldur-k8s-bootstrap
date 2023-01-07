@@ -1,0 +1,34 @@
+# Repo-based installation
+- name: Add Grafana repository
+  kubernetes.core.helm_repository:
+    repo_name: grafana
+    repo_url: https://grafana.github.io/helm-charts
+  environment: "{{ proxy_env | default({}) }}"
+
+- name: Copy custom Loki configuration
+  copy:
+    src: loki/values.yaml
+    dest: loki-values.yaml
+
+- name: Install Loki and Grafana release
+  kubernetes.core.helm:
+    release_name: loki
+    chart_ref: grafana/loki-stack
+    chart_version: "{{ loki_grafana_version }}"
+    state: present
+    values_files:
+      - loki-values.yaml
+    namespace: "{{ waldur_helm_namespace | default('default') }}"
+    kubeconfig: /etc/rancher/rke2/rke2.yaml
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - not (helm_commands_using_shell | default('false') | bool)
+
+- name: Install Loki and Grafana release via shell
+  shell: |
+    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+    kubectl create namespace "{{ waldur_helm_namespace | default('default') }}" || true
+    helm upgrade --install loki --values loki-values.yaml --version "{{ loki_grafana_version }}" grafana/loki-stack -n "{{ waldur_helm_namespace | default('default') }}"
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - helm_commands_using_shell | default('false') | bool

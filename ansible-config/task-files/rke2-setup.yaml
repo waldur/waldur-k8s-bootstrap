@@ -10,6 +10,10 @@
   tags:
     - rke2_setup
 
+- name: Disable SELinux
+  ansible.posix.selinux:
+    state: disabled
+
 - name: Add first server IP to hosts
   lineinfile:
     path: /etc/hosts
