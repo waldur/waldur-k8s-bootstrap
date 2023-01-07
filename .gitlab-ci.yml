@@ -52,6 +52,8 @@ Test deployment:
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     # If event is related to a created merge request
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
   script:
     - ansible-playbook -D -M /usr/local/lib/python3.8/site-packages -i test/test-inventory test/prepare-nodes.yaml
     - cat test/test-inventory
