@@ -81,6 +81,8 @@
     - find_result.matched > 0
 
 - import_tasks: create-waldur-backup.yaml
+  when:
+    - waldur_create_backup | default(true) | bool
 
 - name: Install Waldur release
   kubernetes.core.helm:

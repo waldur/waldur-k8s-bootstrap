@@ -45,6 +45,7 @@ minio_version: 11.10.16 # Version of MinIO Helm chart
 # Waldur setup
 setup_waldur: yes # User can skip Waldur setup
 waldur_image_tag: latest # Waldur version
+waldur_create_backup: yes # Create backup prior to Waldur update
 
 # haproxy_host role
 haproxy_stats_password: "changemedemoonly"
