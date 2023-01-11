@@ -1,25 +1,23 @@
 - name: Create instances for K8s test infra
   gather_facts: false
   hosts: rke2_nodes
-  vars:
-    instance_image:
   tasks:
   - name: Deploy K8s node
     local_action:
       module: waldur_marketplace_os_instance
       access_token: "{{ lookup('env','WALDUR_ACCESS_TOKEN') }}"
-      api_url: https://api.etais.ee/api/
-      flavor: c3.small
-      image: rocky8
+      api_url: "{{ lookup('env','TEST_TARGET_API_URL') }}"
+      flavor: "{{ lookup('env','TEST_TARGET_FLAVOR') }}"
+      image: "{{ lookup('env','RKE2_BASE_IMAGE') }}"
       name: "{{ inventory_hostname }}"
-      offering: Virtual machine in RKE2 cluster
-      project: RKE2 installation testing
-      ssh_key: dev-key
-      subnet: rke2-cluster-sub-net
+      offering: "{{ lookup('env','TEST_TARGET_OFFERING') }}"
+      project: "{{ lookup('env','TEST_TARGET_PROJECT') }}"
+      ssh_key: "{{ lookup('env','TEST_TARGET_KEY') }}"
+      subnet: "{{ lookup('env','TEST_TARGET_SUBNET') }}"
       system_volume_size: 30
-      system_volume_type: scratch
+      system_volume_type: "{{ lookup('env','TEST_TARGET_DISK_TYPE') }}"
       data_volume_size: 60
-      data_volume_type: scratch
+      data_volume_type: "{{ lookup('env','TEST_TARGET_DISK_TYPE') }}"
       security_groups:
         - default
     register: node_install
@@ -34,9 +32,9 @@
     local_action:
       module: waldur_marketplace_os_get_instance
       access_token: "{{ lookup('env','WALDUR_ACCESS_TOKEN') }}"
-      api_url: https://api.etais.ee/api/
+      api_url: "{{ lookup('env','TEST_TARGET_API_URL') }}"
       name: "{{ inventory_hostname }}"
-      project: RKE2 installation testing
+      project: "{{ lookup('env','TEST_TARGET_PROJECT') }}"
     register: k8s_node
 
   - name: Print return information from the previous task
@@ -71,16 +69,16 @@
       local_action:
         module: waldur_marketplace_os_instance
         access_token: "{{ lookup('env','WALDUR_ACCESS_TOKEN') }}"
-        api_url: https://api.etais.ee/api/
-        flavor: c3.nano
-        image: rocky8
+        api_url: "{{ lookup('env','TEST_TARGET_API_URL') }}"
+        flavor: "{{ lookup('env','TEST_TARGET_LB_FLAVOR') }}"
+        image: "{{ lookup('env','RKE2_BASE_IMAGE') }}"
         name: "{{ inventory_hostname }}"
-        offering: Virtual machine in RKE2 cluster
-        project: RKE2 installation testing
-        ssh_key: dev-key
-        subnet: rke2-cluster-sub-net
+        offering: "{{ lookup('env','TEST_TARGET_OFFERING') }}"
+        project: "{{ lookup('env','TEST_TARGET_PROJECT') }}"
+        ssh_key: "{{ lookup('env','TEST_TARGET_KEY') }}"
+        subnet: "{{ lookup('env','TEST_TARGET_SUBNET') }}"
         system_volume_size: 10
-        system_volume_type: prod2
+        system_volume_type: "{{ lookup('env','TEST_TARGET_LB_DISK_TYPE') }}"
         security_groups:
           - default
           - web
@@ -96,9 +94,9 @@
       local_action:
         module: waldur_marketplace_os_get_instance
         access_token: "{{ lookup('env','WALDUR_ACCESS_TOKEN') }}"
-        api_url: https://api.etais.ee/api/
+        api_url: "{{ lookup('env','TEST_TARGET_API_URL') }}"
         name: "{{ inventory_hostname }}"
-        project: RKE2 installation testing
+        project: "{{ lookup('env','TEST_TARGET_PROJECT') }}"
       register: k8s_node
 
     - name: Print return information from the previous task
