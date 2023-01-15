@@ -13,6 +13,7 @@
   ansible.posix.selinux:
     policy: targeted
     state: permissive
+  when: ansible_os_family == 'RedHat' or ansible_os_family == 'Rocky'
 
 - name: Create certs directory if it does not exist
   file:

@@ -13,6 +13,7 @@
 - name: Disable SELinux
   ansible.posix.selinux:
     state: disabled
+  when: ansible_os_family == 'RedHat' or ansible_os_family == 'Rocky'
 
 - name: Add first server IP to hosts
   lineinfile:
@@ -291,3 +292,30 @@
     dest: /var/lib/rancher/rke2/server/manifests/rke2-ingress-nginx-config.yaml
   tags:
     - rke2_setup
+
+# Assure longhorn prerequisites on nodes are fulfilled
+- name: Create storage directory for longhorn on all nodes
+  file:
+    path: "{{ storage_directory }}"
+    state: directory
+    mode: '0755'
+
+- name: Creating a file with content
+  copy:
+    dest: "/etc/multipath.conf"
+    content: |
+      defaults {
+        user_friendly_names yes
+      }
+
+      blacklist {
+          devnode "^sd[a-z0-9]+"
+      }
+  register: multipath_conf
+  when: ansible_os_family == 'Debian'
+
+- name: restart service
+  service:
+    name: multipathd
+    state: restarted
+  when: multipath_conf.changed and ansible_os_family == 'Debian'

@@ -63,7 +63,6 @@ Test deployment:
     - cp -vf $WALDUR_DEV_SSH_PUBKEY .ssh/id_waldur_dev_ssh_pkey.pub
     - chmod 600 .ssh/id_waldur_dev_ssh_pkey
     - ansible-galaxy collection install kubernetes.core
-    - curl -o rke2/rke2-install.sh --create-dirs https://get.rke2.io
     - cp -vf test/test-inventory ansible-config/rke2_inventory
     - cp -vf ansible-config/rke2_vars.example ansible-config/rke2_vars
     - sed -i "s/public.lb.waldur.example.com/$LB_NAME/" ansible-config/rke2_vars
