@@ -1,4 +1,5 @@
 .DS_Store
 .idea/
 .vscode/
+ansible-config/rke2_inventory
 ansible-config/rke2_vars
