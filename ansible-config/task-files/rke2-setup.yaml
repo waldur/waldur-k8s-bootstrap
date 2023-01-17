@@ -1,12 +1,12 @@
 # RKE2 prerequisites
 - name: Selecting initial server from inventory
   set_fact:
-    initial_server: "{{ hostvars.values() | selectattr('initial_server', 'defined') }}"
+    initial_node: "{{ hostvars.values() | selectattr('initial_server', 'defined') }}"
   tags:
     - rke2_setup
 
 - debug:
-    msg: "{{ initial_server[0].ansible_host }} {{ initial_server[0].inventory_hostname }}"
+    msg: "{{ initial_node[0].ansible_host }} {{ initial_node[0].inventory_hostname }}"
   tags:
     - rke2_setup
 
@@ -19,7 +19,7 @@
   lineinfile:
     path: /etc/hosts
     state: present
-    line: "{{ initial_server[0].ansible_host }} {{ initial_server[0].inventory_hostname }}"
+    line: "{{ initial_node[0].ansible_host }} {{ initial_node[0].inventory_hostname }}"
   when:
     - setup_hosts_file | default(true) | bool
     - not (initial_server | default(false) | bool)
@@ -191,7 +191,7 @@
     create: yes
     state: present
     block: |
-      server: https://{{ initial_server[0].inventory_hostname }}:9345
+      server: https://{{ initial_node[0].inventory_hostname }}:9345
       token: {{ rke2_shared_token }}
       cni: {{ rke2_cni | default('canal') }}
       {% if expose_k8s_api %}
