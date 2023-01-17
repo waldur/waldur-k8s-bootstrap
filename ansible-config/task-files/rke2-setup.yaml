@@ -22,7 +22,7 @@
     line: "{{ initial_server[0].ansible_host }} {{ initial_server[0].inventory_hostname }}"
   when:
     - setup_hosts_file | default(true) | bool
-    - inventory_hostname != initial_server[0].inventory_hostname
+    - not (initial_server | default(false) | bool)
   tags:
     - rke2_setup
 
@@ -181,7 +181,7 @@
         - {{ lb_public_domain_name }}
       {% endif %}
   when:
-    - inventory_hostname == initial_server[0].inventory_hostname
+    - initial_server | default(false) | bool
   tags:
     - rke2_setup
 
@@ -198,7 +198,8 @@
       tls-san:
         - {{ lb_public_domain_name }}
       {% endif %}
-  when: inventory_hostname != initial_server[0].inventory_hostname
+  when:
+    - not (initial_server | default(false) | bool)
   tags:
     - rke2_setup
 
@@ -233,7 +234,8 @@
     service: rke2-server.service
     state: started
   # It is required to run initial server before others
-  when: inventory_hostname == initial_server[0].inventory_hostname
+  when:
+    - initial_server | default(false) | bool
   tags:
     - rke2_setup
 
@@ -248,7 +250,8 @@
   systemd:
     service: rke2-server.service
     state: started
-  when: inventory_hostname != initial_server[0].inventory_hostname
+  when:
+    - initial_server | default(false) | bool
   register: start_server
   tags:
     - rke2_setup

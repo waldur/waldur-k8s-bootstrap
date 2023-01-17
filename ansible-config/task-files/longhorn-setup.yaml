@@ -24,10 +24,6 @@
     state: started
 
 # Longhorn installation
-- name: Selecting initial server from inventory
-  set_fact:
-    initial_server: "{{ hostvars.values() | selectattr('initial_server', 'defined') }}"
-
 - name: Add Longhorn repository
   kubernetes.core.helm_repository:
     repo_name: longhorn
@@ -35,7 +31,7 @@
     repo_state: present
   environment: "{{ proxy_env | default({}) }}"
   when:
-    - inventory_hostname == initial_server[0].inventory_hostname
+    - initial_server | default(false) | bool
 
 - name: Install Longhorn release
   kubernetes.core.helm:
@@ -54,7 +50,7 @@
         defaultDataPath: "{{ storage_directory }}"
   environment: "{{ proxy_env | default({}) }}"
   when:
-    - inventory_hostname == initial_server[0].inventory_hostname
+    - initial_server | default(false) | bool
     - not (helm_commands_using_shell | default('false') | bool)
 
 - name: Install Longhorn release via shell
@@ -64,5 +60,5 @@
     helm upgrade --install longhorn longhorn/longhorn --version "{{ longhorn_version }}" -n longhorn-system --set defaultSettings.defaultDataPath="{{ storage_directory }}" --set csi.kubeletRootDir=/var/lib/kubelet/
   environment: "{{ proxy_env | default({}) }}"
   when:
-    - inventory_hostname == initial_server[0].inventory_hostname
+    - initial_server | default(false) | bool
     - helm_commands_using_shell | default('false') | bool
