@@ -121,8 +121,3 @@
   debug:
     msg: "{{ helm_releases.stdout }}"
   run_once: true
-
-- name: Cleanup waldur_helm directory
-  file:
-    path: waldur_helm
-    state: absent
