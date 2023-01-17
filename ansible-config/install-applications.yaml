@@ -4,45 +4,38 @@
   vars_files:
     - rke2_vars
   tasks:
-    - name: Selecting initial server from inventory
-      set_fact:
-        initial_server: "{{ hostvars.values() | selectattr('initial_server', 'defined') }}"
-
-    - debug:
-        msg: "{{ initial_server[0].ansible_host }} {{ initial_server[0].inventory_hostname }}"
-
     - name: Setup k8s dashboard
       import_tasks: task-files/k8s-dashboard-setup.yaml
       when:
         - setup_k8s_dashboard | default(true)
-        - inventory_hostname == initial_server[0].inventory_hostname
+        - initial_server | default(false) | bool
 
     - name: Setup Loki, Grafana, Prometheus
       import_tasks: task-files/loki-installation.yaml
       when:
         - setup_loki_prom_grafana | default(true)
-        - inventory_hostname == initial_server[0].inventory_hostname
+        - initial_server | default(false) | bool
 
     - name: Setup PostgreSQL
       import_tasks: task-files/postgresql-installation.yaml
       when:
         - setup_postgresql | default(true)
-        - inventory_hostname == initial_server[0].inventory_hostname
+        - initial_server | default(false) | bool
 
     - name: Setup RabbitMQ
       import_tasks: task-files/rabbitmq-installation.yaml
       when:
         - setup_rabbitmq | default(true)
-        - inventory_hostname == initial_server[0].inventory_hostname
+        - initial_server | default(false) | bool
 
     - name: Setup MinIO
       import_tasks: task-files/minio-installation.yaml
       when:
         - setup_minio | default(true)
-        - inventory_hostname == initial_server[0].inventory_hostname
+        - initial_server | default(false) | bool
 
     - name: Setup Waldur
       import_tasks: task-files/waldur-installation.yaml
       when:
         - setup_waldur | default(true)
-        - inventory_hostname == initial_server[0].inventory_hostname
+        - initial_server | default(false) | bool

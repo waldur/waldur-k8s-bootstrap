@@ -5,13 +5,6 @@
     - rke2_vars
   tasks:
     - block:
-      - name: Selecting initial server from inventory
-        set_fact:
-          initial_server: "{{ hostvars.values() | selectattr('initial_server', 'defined') }}"
-
-      - debug:
-          msg: "{{ initial_server[0].ansible_host }} {{ initial_server[0].inventory_hostname }}"
-
       - name: Scale Waldur backend pods to 0
         environment:
           KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
@@ -20,7 +13,7 @@
           kubectl scale --replicas=0 --timeout=30s -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-mastermind-worker
           kubectl scale --replicas=0 --timeout=30s -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-mastermind-beat
         when:
-          - inventory_hostname == initial_server[0].inventory_hostname
+          - initial_server | default(false) | bool
 
       - name: Fetch available backups
         environment:
@@ -29,7 +22,7 @@
           kubectl exec -n "{{ waldur_helm_namespace | default('default') }}" deployment/waldur-db-restore -- db-backup-minio-auth
         register: backups
         when:
-          - inventory_hostname == initial_server[0].inventory_hostname
+          - initial_server | default(false) | bool
 
       - name: List backups
         debug:
@@ -74,9 +67,9 @@
       environment:
         KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
         when:
-          - inventory_hostname == initial_server[0].inventory_hostname
+          - initial_server | default(false) | bool
 
     - name: Update Waldur
       import_tasks: task-files/waldur-installation.yaml
       when:
-        - inventory_hostname == initial_server[0].inventory_hostname
+        - initial_server | default(false) | bool
