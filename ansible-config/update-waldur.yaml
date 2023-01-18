@@ -6,6 +6,8 @@
   tasks:
     - name: Setup Waldur
       import_tasks: task-files/waldur-installation.yaml
+      when:
+        - initial_server | default(false) | bool
 
     - name: Restart deployments to apply configmaps changes
       shell: |

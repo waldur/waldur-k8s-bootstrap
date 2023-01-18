@@ -16,7 +16,6 @@
     dest: "."
   when:
     - "'waldur/waldur-chart.zip' is file"
-    - initial_server | default(false) | bool
 
 - name: Rename target Waldur Helm direcroty
   command: mv waldur-helm-master waldur_helm
