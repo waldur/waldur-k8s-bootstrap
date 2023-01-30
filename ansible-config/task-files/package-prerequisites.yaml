@@ -4,3 +4,4 @@
       - git
       - tar
     state: present
+  environment: "{{ proxy_env | default({}) }}"
