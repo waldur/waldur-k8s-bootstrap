@@ -32,6 +32,9 @@ setup_loki_prom_grafana: yes # User can skip log aggregation/monitoring setup
 loki_grafana_version: 2.8.9 # Version of loki-stack Helm chart
 prometheus_version: 19.2.2 # Version of Prometheus Helm chart
 
+setup_lets_encrypt: yes # User can skip Let's Encrypt setup
+lets_encrypt_version: v1.7.1
+
 # Waldur dependency setup
 setup_postgresql: yes # User can skip PostgreSQL setup
 postgresql_version: 11.9.1 # Version of PostgreSQL Helm chart
