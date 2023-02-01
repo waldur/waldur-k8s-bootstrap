@@ -16,6 +16,12 @@
         - setup_loki_prom_grafana | default(true)
         - initial_server | default(false) | bool
 
+    - name: Setup LetsEncrypt
+      import_tasks: task-files/letsencrypt-installation.yaml
+      when:
+        - setup_lets_encrypt | default(true)
+        - initial_server | default(false) | bool
+
     - name: Setup PostgreSQL
       import_tasks: task-files/postgresql-installation.yaml
       when:
