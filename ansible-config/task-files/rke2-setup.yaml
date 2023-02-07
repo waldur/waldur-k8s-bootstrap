@@ -251,7 +251,7 @@
     service: rke2-server.service
     state: started
   when:
-    - initial_server | default(false) | bool
+    - not (initial_server | default(false) | bool)
   register: start_server
   tags:
     - rke2_setup
