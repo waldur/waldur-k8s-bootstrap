@@ -1,6 +1,12 @@
+image:
+  registry: registry.hpc.ut.ee/mirror
+  repository: bitnami/keycloak
+
 auth:
-  adminUser: admin
   adminPassword: randomchangeme
+
+service:
+  type: ClusterIP
 
 ingress:
   enabled: true
