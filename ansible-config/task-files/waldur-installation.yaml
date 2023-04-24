@@ -98,16 +98,6 @@
     namespace: "{{ waldur_helm_namespace | default('default') }}"
     kubeconfig: /etc/rancher/rke2/rke2.yaml
     timeout: 30m0s
-  when:
-    - not (helm_commands_using_shell | default('false') | bool)
-
-- name: Install Waldur release via shell
-  shell: |
-    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-    helm upgrade --install waldur ./waldur_helm/waldur/ -n "{{ waldur_helm_namespace | default('default') }}" -f ./waldur_helm/waldur/values.yaml -f ./waldur_helm/waldur/custom-values.yaml --set waldur.imageTag={{ waldur_image_tag | default('latest') }} --timeout 40m0s
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - helm_commands_using_shell | default('false') | bool
 
 - name: Get release list in the namespace
   command: helm ls -n "{{ waldur_helm_namespace | default('default') }}"

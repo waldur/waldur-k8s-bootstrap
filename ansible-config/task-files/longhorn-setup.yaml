@@ -51,14 +51,3 @@
   environment: "{{ proxy_env | default({}) }}"
   when:
     - initial_server | default(false) | bool
-    - not (helm_commands_using_shell | default('false') | bool)
-
-- name: Install Longhorn release via shell
-  shell: |
-    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-    kubectl create namespace longhorn-system || true
-    helm upgrade --install longhorn longhorn/longhorn --version "{{ longhorn_version }}" -n longhorn-system --set defaultSettings.defaultDataPath="{{ storage_directory }}" --set csi.kubeletRootDir=/var/lib/kubelet/
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - initial_server | default(false) | bool
-    - helm_commands_using_shell | default('false') | bool

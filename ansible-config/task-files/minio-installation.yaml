@@ -21,14 +21,3 @@
     namespace: "{{ waldur_helm_namespace | default('default') }}"
     kubeconfig: /etc/rancher/rke2/rke2.yaml
   environment: "{{ proxy_env | default({}) }}"
-  when:
-    - not (helm_commands_using_shell | default('false') | bool)
-
-- name: Install MinIO release via shell
-  shell: |
-    export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-    kubectl create namespace "{{ waldur_helm_namespace | default('default') }}" || true
-    helm upgrade --install minio bitnami/minio --version "{{ minio_version }}" -n "{{ waldur_helm_namespace | default('default') }}" -f minio-values.yaml
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - helm_commands_using_shell | default('false') | bool

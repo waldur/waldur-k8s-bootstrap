@@ -1,0 +1,23 @@
+# Repo-based installation
+- name: Add codecentric repository
+  kubernetes.core.helm_repository:
+    repo_name: codecentric
+    repo_url: https://codecentric.github.io/helm-charts
+  environment: "{{ proxy_env | default({}) }}"
+
+- name: Copy custom Keycloak file
+  copy:
+    src: keycloak/values.yaml
+    dest: keycloak-values.yaml
+
+- name: Install Keycloak release
+  kubernetes.core.helm:
+    release_name: keycloak
+    chart_ref: codecentric/keycloak
+    chart_version: "{{ keycloak_version }}"
+    state: present
+    values_files:
+      - keycloak-values.yaml
+    namespace: "{{ waldur_helm_namespace | default('default') }}"
+    kubeconfig: /etc/rancher/rke2/rke2.yaml
+  environment: "{{ proxy_env | default({}) }}"

@@ -4,6 +4,19 @@
   vars_files:
     - rke2_vars
   tasks:
+    - name: Selecting initial server from inventory
+      set_fact:
+        initial_server: "{{ hostvars.values() | selectattr('initial_server', 'defined') }}"
+
+    - debug:
+        msg: "{{ initial_server[0].ansible_host }} {{ initial_server[0].inventory_hostname }}"
+
+    - name: Setup Keyclaok
+      import_tasks: task-files/keycloak-installation.yaml
+      when:
+        - setup_keycloak | default(true)
+        - inventory_hostname == initial_server[0].inventory_hostname
+
     - name: Setup k8s dashboard
       import_tasks: task-files/k8s-dashboard-setup.yaml
       when:
@@ -20,18 +33,6 @@
       import_tasks: task-files/letsencrypt-installation.yaml
       when:
         - setup_lets_encrypt | default(true)
-        - initial_server | default(false) | bool
-
-    - name: Setup PostgreSQL
-      import_tasks: task-files/postgresql-installation.yaml
-      when:
-        - setup_postgresql | default(true)
-        - initial_server | default(false) | bool
-
-    - name: Setup RabbitMQ
-      import_tasks: task-files/rabbitmq-installation.yaml
-      when:
-        - setup_rabbitmq | default(true)
         - initial_server | default(false) | bool
 
     - name: Setup MinIO
