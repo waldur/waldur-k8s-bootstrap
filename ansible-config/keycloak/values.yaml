@@ -12,4 +12,5 @@ metrics:
 
 postgresql:
   enabled: true
-  postgresqlPassword: randomchangeme2
+  auth:
+    postgresPassword: randomchangeme2
