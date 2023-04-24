@@ -1,12 +1,14 @@
-extraEnv: |
-  - name: KEYCLOAK_LOGLEVEL
-    value: DEBUG
-  - name: KEYCLOAK_USER
-    value: admin
-  - name: KEYCLOAK_PASSWORD
-    value: randomchangeme
-  - name: PROXY_ADDRESS_FORWARDING
-    value: "true"
+auth:
+  adminUser: admin
+  adminPassword: randomchangeme
+
+ingress:
+  enabled: true
+  hostname: {{ lb_public_domain_name }}
+  path: /keycloak-auth
+
+metrics:
+  enabled: true
 
 postgresql:
   enabled: true

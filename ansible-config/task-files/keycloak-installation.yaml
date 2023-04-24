@@ -1,8 +1,8 @@
 # Repo-based installation
 - name: Add codecentric repository
   kubernetes.core.helm_repository:
-    repo_name: codecentric
-    repo_url: https://codecentric.github.io/helm-charts
+    repo_name: bitnami
+    repo_url: https://charts.bitnami.com/bitnami
   environment: "{{ proxy_env | default({}) }}"
 
 - name: Copy custom Keycloak file
@@ -13,7 +13,7 @@
 - name: Install Keycloak release
   kubernetes.core.helm:
     release_name: keycloak
-    chart_ref: codecentric/keycloak
+    chart_ref: bitnami/keycloak
     chart_version: "{{ keycloak_version }}"
     state: present
     values_files:
