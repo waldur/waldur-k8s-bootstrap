@@ -88,6 +88,7 @@
   kubernetes.core.helm:
     chart_ref: "./waldur_helm/waldur/"
     release_name: waldur
+    dependency_update: true
     values_files:
       - "./waldur_helm/waldur/values.yaml"
       - "./waldur_helm/waldur/custom-values.yaml"
