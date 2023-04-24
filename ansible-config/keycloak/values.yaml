@@ -4,7 +4,7 @@ auth:
 
 ingress:
   enabled: true
-  hostname: {{ lb_public_domain_name }}
+  hostname: "{{ lb_public_domain_name }}"
   path: /keycloak-auth
 
 metrics:
