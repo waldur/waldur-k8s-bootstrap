@@ -6,7 +6,7 @@
   environment: "{{ proxy_env | default({}) }}"
 
 - name: Copy custom MinIO file
-  copy:
+  template:
     src: minio/values.yaml
     dest: minio-values.yaml
 

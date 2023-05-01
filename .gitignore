@@ -3,3 +3,4 @@
 .vscode/
 ansible-config/rke2_inventory
 ansible-config/rke2_vars
+ansible-config/rke2_vars.custom

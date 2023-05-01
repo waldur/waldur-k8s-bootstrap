@@ -5,6 +5,7 @@
   become: yes
   hosts: rke2_nodes
   vars_files:
-    - rke2_vars
+    - rke2_vars.defaults
+    - rke2_vars.custom
   roles:
     - ssh_admin
