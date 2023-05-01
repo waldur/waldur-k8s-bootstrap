@@ -6,7 +6,7 @@
   environment: "{{ proxy_env | default({}) }}"
 
 - name: Copy custom Keycloak file
-  copy:
+  template:
     src: keycloak/values.yaml
     dest: keycloak-values.yaml
 
