@@ -24,7 +24,7 @@
     state: started
 
 - name: Copy custom Longhorn file
-  copy:
+  template:
     src: longhorn/values.yaml
     dest: longhorn-values.yaml
 
