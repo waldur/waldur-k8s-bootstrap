@@ -5,6 +5,7 @@
   become: yes
   hosts: "{{ host_group | default('lb') }}"
   vars_files:
-    - rke2_vars
+    - rke2_vars.defaults
+    - rke2_vars.custom
   roles:
     - { role: haproxy_host, tags: haproxy_host, environment: "{{ proxy_env }}" }

@@ -2,7 +2,8 @@
   hosts: "{{ host_group | default('rke2_nodes') }}"
   become: true
   vars_files:
-    - rke2_vars
+    - rke2_vars.defaults
+    - rke2_vars.custom
   tasks:
     - name: Selecting initial server from inventory
       set_fact:

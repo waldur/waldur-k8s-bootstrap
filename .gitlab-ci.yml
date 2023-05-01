@@ -64,8 +64,7 @@ Test deployment:
     - chmod 600 .ssh/id_waldur_dev_ssh_pkey
     - ansible-galaxy collection install kubernetes.core
     - cp -vf test/test-inventory ansible-config/rke2_inventory
-    - cp -vf ansible-config/rke2_vars.example ansible-config/rke2_vars
-    - sed -i "s/public.lb.waldur.example.com/$LB_NAME/" ansible-config/rke2_vars
+    - echo 'lb_public_domain_name:' $LB_NAME >> ansible-config/rke2_vars.custom
     - cp -vf test/waldur-values.yaml ansible-config/waldur/values.yaml
     - cd ansible-config
     - ansible-playbook -D -i rke2_inventory install-infrastructure.yaml --key-file ../.ssh/id_waldur_dev_ssh_pkey

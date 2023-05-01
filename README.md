@@ -29,7 +29,7 @@ To install Waldur on top of [RKE2](https://docs.rke2.io/) you need to:
     ansible-galaxy collection install ansible-galaxy/ansible-posix-1.4.0.tar.gz
     ```
 
-5. Adjust variables in `ansible-config/rke2_vars` file
+5. Create a new configuration file `ansible-config/rke2_vars.custom` for overrides.
 
 6. (Optional) Run the playbook to setup infrastructure (Kubernetes and Longhorn):
 

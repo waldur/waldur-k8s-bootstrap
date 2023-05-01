@@ -34,17 +34,9 @@
 
 
 - name: Copy custom Waldur chart values
-  copy:
+  template:
     src: waldur/values.yaml
     dest: waldur_helm/waldur/custom-values.yaml
-  when:
-    - "'waldur/values.yaml' is file"
-
-- name: Create an empty file for custom Waldur values if file is missing
-  copy:
-    content: ""
-    dest: waldur_helm/waldur/custom-values.yaml
-    force: no
 
 - name: Add proxy env in custom values file
   blockinfile:

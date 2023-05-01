@@ -6,7 +6,7 @@
   environment: "{{ proxy_env | default({}) }}"
 
 - name: Copy custom Loki configuration
-  copy:
+  template:
     src: loki/values.yaml
     dest: loki-values.yaml
 
