@@ -25,7 +25,7 @@ setup_longhorn: yes # User can skip Longhorn setup
 longhorn_version: 1.4.1 # Version of Longhorn Helm chart
 
 setup_keycloak: yes
-keycloak_version: 14.2.0 # Version of Keycloak Helm chart
+keycloak_version: 14.4.1 # Version of Keycloak Helm chart
 
 setup_k8s_dashboard: yes # User can skip k8s dashboard setup
 k8s_dashboard_version: 6.0.0 # Version of K8s Dashboard Helm chart

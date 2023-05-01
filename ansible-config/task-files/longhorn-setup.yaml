@@ -23,6 +23,11 @@
     enabled: true
     state: started
 
+- name: Copy custom Longhorn file
+  copy:
+    src: longhorn/values.yaml
+    dest: longhorn-values.yaml
+
 # Longhorn installation
 - name: Add Longhorn repository
   kubernetes.core.helm_repository:
@@ -43,11 +48,8 @@
     update_repo_cache: true
     create_namespace: true
     kubeconfig: /etc/rancher/rke2/rke2.yaml
-    values:
-      csi:
-        kubeletRootDir: /var/lib/kubelet/
-      defaultSettings:
-        defaultDataPath: "{{ storage_directory }}"
+    values_files:
+      - longhorn-values.yaml
   environment: "{{ proxy_env | default({}) }}"
   when:
     - initial_server | default(false) | bool
