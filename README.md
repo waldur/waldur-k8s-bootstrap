@@ -22,8 +22,8 @@ To install Waldur on top of [RKE2](https://docs.rke2.io/) you need to:
     ansible-galaxy collection install kubernetes.core
     ansible-galaxy collection install ansible.posix
     # or
-    curl -L -o ansible-galaxy/kubernetes-core-2.3.2.tar.gz --create-dirs https://galaxy.ansible.com/download/kubernetes-core-2.3.2.tar.gz
-    ansible-galaxy collection install ansible-galaxy/kubernetes-core-2.3.2.tar.gz
+    curl -L -o ansible-galaxy/kubernetes-core-2.4.0.tar.gz --create-dirs https://galaxy.ansible.com/download/kubernetes-core-2.3.2.tar.gz
+    ansible-galaxy collection install ansible-galaxy/kubernetes-core-2.4.0.tar.gz
 
     curl -L -o ansible-galaxy/ansible-posix-1.4.0.tar.gz https://galaxy.ansible.com/download/ansible-posix-1.4.0.tar.gz
     ansible-galaxy collection install ansible-galaxy/ansible-posix-1.4.0.tar.gz
