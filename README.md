@@ -6,7 +6,7 @@ To install Waldur on top of [RKE2](https://docs.rke2.io/) you need to:
 
 1. Install [Ansible](https://docs.ansible.com/ansible/2.10/) with version >= 2.10 and ensure python3 is installed.
 
-2. Download this repository
+2. Download Waldur K8s Boostrap repository: https://github.com/waldur/waldur-k8s-bootstrap
 
 3. At least 3 nodes with minimal requirements for Kubernetes nodes
 
