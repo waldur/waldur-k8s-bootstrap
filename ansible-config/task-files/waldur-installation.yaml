@@ -32,20 +32,8 @@
   environment: "{{ proxy_env | default({}) }}"
   when:
     - "'waldur/waldur-chart.zip' is not file"
-    - helm_repo_tag is not defined
   vars:
     helm_repo_version: "{{ 'HEAD' if helm_waldur_image_tag | default('latest') == 'latest' else helm_waldur_image_tag }}"
-
-- name: Clone Waldur Helm repository with custom tag
-  git:
-    repo: "{{ waldur_helm_repo_url | default('https://github.com/waldur/waldur-helm') }}"
-    dest: waldur_helm
-    force: yes
-    version: "{{ helm_repo_tag }}"
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - "'waldur/waldur-chart.zip' is not file"
-    - helm_repo_tag is defined
 
 - name: Copy custom Waldur chart values
   template:
