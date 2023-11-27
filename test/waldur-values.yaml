@@ -11,3 +11,9 @@ waldur:
 
 global:
   imageRegistry: "registry.hpc.ut.ee/mirror"
+
+postgresql:
+  enabled: true
+
+rabbitmq:
+  enabled: true
