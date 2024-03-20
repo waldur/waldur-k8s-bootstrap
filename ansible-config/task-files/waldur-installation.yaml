@@ -93,6 +93,7 @@
     namespace: "{{ waldur_helm_namespace | default('default') }}"
     kubeconfig: /etc/rancher/rke2/rke2.yaml
     timeout: 30m0s
+    wait: true
   environment: "{{ proxy_env | default({}) }}"
 
 - name: Get release list in the namespace
