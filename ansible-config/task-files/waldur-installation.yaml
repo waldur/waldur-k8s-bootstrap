@@ -78,6 +78,15 @@
   when:
     - waldur_create_backup | default(true) | bool
 
+# TODO: drop after production update
+- name: Delete ingress-api
+  kubernetes.core.k8s:
+    kind: ingress
+    namespace: default
+    name: api-ingress
+    state: absent
+    kubeconfig: /etc/rancher/rke2/rke2.yaml
+
 - name: Install Waldur release
   kubernetes.core.helm:
     chart_ref: "./waldur_helm/waldur/"
