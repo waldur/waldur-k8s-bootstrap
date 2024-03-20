@@ -80,12 +80,10 @@
 
 # TODO: drop after production update
 - name: Delete ingress-api
-  kubernetes.core.k8s:
-    kind: ingress
-    namespace: default
-    name: api-ingress
-    state: absent
-    kubeconfig: /etc/rancher/rke2/rke2.yaml
+  shell: kubectl delete ingress api-ingress
+  environment:
+    KUBECONFIG: "/etc/rancher/rke2/rke2.yaml"
+  ignore_errors: true
 
 - name: Install Waldur release
   kubernetes.core.helm:
